@@ -1,7 +1,7 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Blox Hub", colors)
+local Window = Library.CreateLib("Box Hub", colors)
 local Tab = Window:NewTab("Menu")
-local Section = Tab:NewSection("By Blox Hub")
+local Section = Tab:NewSection("By Box Hub")
 players = {}
  
 for i,v in pairs(game:GetService("Players"):GetChildren()) do
