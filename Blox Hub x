@@ -67,11 +67,6 @@ local colors = {
     TextColor = Color3.fromRGB(255,255,255),
     ElementColor = Color3.fromRGB(20, 20, 20)
 }
-local Tab = Window:NewTab("admin commands")
-local Section = Tab:NewSection("commands")
-Section:NewButton("admin commands", "", function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-end)
 local Tab = Window:NewTab("Settings")
 local Section = Tab:NewSection("Settings")
 Section:NewKeybind("on/off", "KeybindInfo", Enum.KeyCode.LeftControl, function()
