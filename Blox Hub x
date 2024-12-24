@@ -32,7 +32,6 @@ Section:NewToggle("AutoShake", "", function(v)
     _G.AutoShake = v
 pcall(function()
 while _G.AutoShake do wait()
-              task.wait(0)
                 local PlayerGUI = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
                 local shakeUI = PlayerGUI:FindFirstChild("shakeui")
                 if shakeUI and shakeUI.Enabled then
