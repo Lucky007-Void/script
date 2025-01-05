@@ -1,6 +1,7 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("LuckyX Hub", "DarkTheme")
 local Tab = Window:NewTab("Moodeng Fruit")
+Image = "rbxassetid://4483345998"
 local Section = Tab:NewSection("Auto Farm")
 
 -- Configurations
@@ -70,15 +71,16 @@ local function updateMonsterList(system)
     end
 end
 
--- Function to teleport to a monster for each system
 local TweenService = game:GetService("TweenService")
 
 local function teleportToMonster(system)
     local config = systems[system]
-    if not config or not config.selectedMonster then return end
+    if not config or not config.selectedMonster then
+        warn("Invalid system or no selected monster.")
+        return
+    end
 
     local monstersFolder = system == "Mon" and config.monFolders or {config.enemiesFolderPath}
-
     for _, folder in pairs(monstersFolder) do
         if folder then
             for _, monster in pairs(folder:GetChildren()) do
@@ -89,37 +91,91 @@ local function teleportToMonster(system)
                         local character = player.Character
                         if character and character:FindFirstChild("HumanoidRootPart") then
                             local humanoidRootPart = character.HumanoidRootPart
-                            local monsterPosition = monster.HumanoidRootPart.Position
-                            local behindPosition = monsterPosition - monster.HumanoidRootPart.CFrame.LookVector * 3.4
+                            local monsterRootPart = monster:FindFirstChild("HumanoidRootPart")
 
-                            -- สร้าง Tween เพื่อเคลื่อนที่แบบสมูท
-                            local tweenInfo = TweenInfo.new(
-                                0, -- ระยะเวลาการ Tween (ปรับค่าได้)
-                                Enum.EasingStyle.Linear, -- รูปแบบการเคลื่อนที่
-                                Enum.EasingDirection.InOut -- ทิศทางการ Tween
-                            )
+                            -- คำนวณตำแหน่งด้านหลังมอนสเตอร์
+                            local behindPosition = monsterRootPart.CFrame * CFrame.new(0, 10, 0) -- อยู่ด้านบนมอนสเตอร์ 15 หน่วย
+                            
+                            -- ย้าย HumanoidRootPart ไปยังตำแหน่งใหม่ และหันหน้าไปหามอนสเตอร์
+                            humanoidRootPart.CFrame = CFrame.lookAt(behindPosition.Position, monsterRootPart.Position)
 
-                            local tweenGoal = {
-                                CFrame = CFrame.lookAt(behindPosition, monsterPosition)
-                            }
-
-                            local tween = TweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
-                            tween:Play()
-
-                            -- รอจนกว่า Tween จะเสร็จ
-                            tween.Completed:Wait()
-
-                            print("Smoothly teleported to and facing:", config.selectedMonster)
+                            print("Teleported to and facing:", config.selectedMonster)
                             return
+                        else
+                            warn("Character or HumanoidRootPart not found.")
                         end
                     else
                         print("Monster is dead, looking for another monster...")
                     end
                 end
             end
+        else
+            warn("Folder not found in monstersFolder.")
         end
     end
     print("Monster not found:", config.selectedMonster)
+end
+
+
+
+local TweenService = game:GetService("TweenService")
+
+local function teleportMonstersToSelectedMonster(system)
+    local config = systems[system]
+    if not config or not config.selectedMonster then return end
+
+    local monstersFolder = system == "Mon" and config.monFolders or {config.enemiesFolderPath}
+
+    local hitboxConfig = {
+        size = Vector3.new(10, 30, 10),
+        transparency = 0.8,
+        color = BrickColor.new("Really black"),
+        material = Enum.Material.Neon,
+        canCollide = false
+    }
+
+    for _, folder in pairs(monstersFolder) do
+        if folder and folder:IsA("Folder") then
+            local targetMonster = nil
+            for _, monster in pairs(folder:GetChildren()) do
+                if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
+                    targetMonster = monster
+                    break
+                end
+            end
+
+            if targetMonster then
+                local targetPosition = targetMonster.HumanoidRootPart.Position
+
+                for _, monster in pairs(folder:GetChildren()) do
+                    if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
+                        local humanoid = monster:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            -- Disable movement and jumping
+                            humanoid.WalkSpeed = 0
+                            humanoid.JumpPower = 0
+                        end
+
+                        local otherHumanoidRootPart = monster.HumanoidRootPart
+                        local tweenInfo = TweenInfo.new(0, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                        local tweenGoal = {CFrame = CFrame.new(targetPosition)}
+                        local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
+                        tween:Play()
+
+                        otherHumanoidRootPart.Size = hitboxConfig.size
+                        otherHumanoidRootPart.Transparency = hitboxConfig.transparency
+                        otherHumanoidRootPart.CanCollide = hitboxConfig.canCollide
+						otherHumanoidRootPart.Anchored = true
+                        otherHumanoidRootPart.BrickColor = hitboxConfig.color
+                        otherHumanoidRootPart.Material = hitboxConfig.material
+                    end
+                end
+                print("Teleported all monsters with the same name to:", config.selectedMonster)
+            else
+                print("Monster not found in folder:", folder.Name, "Monster Name:", config.selectedMonster)
+            end
+        end
+    end
 end
 
 -- Function to auto-click (without using the mouse directly)
@@ -147,6 +203,7 @@ for system, config in pairs(systems) do
             print("Auto teleport (" .. system .. ") activated")
             while config.isAutoTeleportActive do
                 teleportToMonster(system)
+				teleportMonstersToSelectedMonster(system)
                 task.wait(0) -- Adjusted to 1 second to avoid high CPU load
             end
         else
