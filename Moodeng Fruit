@@ -71,32 +71,49 @@ local function updateMonsterList(system)
 end
 
 -- Function to teleport to a monster for each system
+local TweenService = game:GetService("TweenService")
+
 local function teleportToMonster(system)
     local config = systems[system]
     if not config or not config.selectedMonster then return end
 
     local monstersFolder = system == "Mon" and config.monFolders or {config.enemiesFolderPath}
 
-    -- วนลูปเช็คในทุกโฟลเดอร์ที่มอนสเตอร์อยู่
     for _, folder in pairs(monstersFolder) do
         if folder then
             for _, monster in pairs(folder:GetChildren()) do
                 if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
                     local humanoid = monster:FindFirstChild("Humanoid")
-                    if humanoid then
-                        -- ถ้ามอนสเตอร์มีชีวิตอยู่
-                        if humanoid.Health > 0 then
-                            local player = game.Players.LocalPlayer
-                            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                                local monsterPosition = monster.HumanoidRootPart.Position
-                                local behindPosition = monsterPosition - monster.HumanoidRootPart.CFrame.LookVector * 3.4
-                                player.Character.HumanoidRootPart.CFrame = CFrame.lookAt(behindPosition, monsterPosition)
-                                print("Teleported to and facing:", config.selectedMonster)
-                                return
-                            end
-                        else
-                            print("Monster is dead, looking for another monster...")
+                    if humanoid and humanoid.Health > 0 then
+                        local player = game.Players.LocalPlayer
+                        local character = player.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local humanoidRootPart = character.HumanoidRootPart
+                            local monsterPosition = monster.HumanoidRootPart.Position
+                            local behindPosition = monsterPosition - monster.HumanoidRootPart.CFrame.LookVector * 3.4
+
+                            -- สร้าง Tween เพื่อเคลื่อนที่แบบสมูท
+                            local tweenInfo = TweenInfo.new(
+                                0, -- ระยะเวลาการ Tween (ปรับค่าได้)
+                                Enum.EasingStyle.Linear, -- รูปแบบการเคลื่อนที่
+                                Enum.EasingDirection.InOut -- ทิศทางการ Tween
+                            )
+
+                            local tweenGoal = {
+                                CFrame = CFrame.lookAt(behindPosition, monsterPosition)
+                            }
+
+                            local tween = TweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
+                            tween:Play()
+
+                            -- รอจนกว่า Tween จะเสร็จ
+                            tween.Completed:Wait()
+
+                            print("Smoothly teleported to and facing:", config.selectedMonster)
+                            return
                         end
+                    else
+                        print("Monster is dead, looking for another monster...")
                     end
                 end
             end
