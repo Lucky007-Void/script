@@ -41,8 +41,19 @@ Bar:GetPropertyChangedSignal("Size"):Connect(function()
     end
 end)
 
-local Tab = Window:NewTab("Settings")
-local Section = Tab:NewSection("Settings")
-Section:NewKeybind("on/off", "KeybindInfo", Enum.KeyCode.LeftControl, function()
+local Tab = Window:NewTab("Misc")
+local Section = Tab:NewSection("Misc")
+
+Section:NewSlider("WalkSpeed", "", 500, 0, function(s) -- 500 (MaxValue) | 0 (MinValue)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
+
+Section:NewSlider("JumpPower", "", 500, 0, function(j) -- 500 (MaxValue) | 0 (MinValue)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = j
+end)
+
+local Tab = Window:NewTab("Setting")
+local Section = Tab:NewSection("Setting")
+Section:NewKeybind("on/off", "KeybindInfo", Enum.KeyCode.RightControl, function()
   Library:ToggleUI()
 end)
