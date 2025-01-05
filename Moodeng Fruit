@@ -446,5 +446,3 @@ local Section = Tab:NewSection("Setting")
 Section:NewKeybind("on/off", "KeybindInfo", Enum.KeyCode.RightControl, function()
   Library:ToggleUI()
 end)
-
-
