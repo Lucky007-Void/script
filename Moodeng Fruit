@@ -385,13 +385,57 @@ end)
 local Tab = Window:NewTab("Teleport")
 local Section = Tab:NewSection("Teleport")
 
-local TeleportService = game:GetService("TeleportService")
+local folderName = "Portal"
+local folder = workspace.Map:FindFirstChild(folderName) -- ค้นหาโฟลเดอร์ใน Workspace
 
-local Button = Section:NewButton("Teleport to Dungeon", "Click to teleport", function()
-    -- ใส่ PlaceID ที่ต้องการจะวาปไป
-    local placeId = 76091669089883  -- แทนที่ด้วย PlaceID ที่ต้องการ
-    TeleportService:Teleport(placeId)
-end)
+-- ตรวจสอบว่ามีโฟลเดอร์หรือไม่
+if not folder then
+    warn("Folder '" .. folderName .. "' not found in workspace")
+else
+   -- สร้างปุ่มสำหรับ Teleport ไปยังแต่ละ Part ในโฟลเดอร์
+    for _, part in ipairs(folder:GetChildren()) do
+        if part:IsA("BasePart") then
+            -- ตัวแปรเก็บ CFrame ล่าสุดของ part
+            local lastCFrame = part.CFrame
+
+            -- สร้างฟังก์ชันเพื่อเทเลพอทไปที่ CFrame ของ part
+            local function teleportToPart()
+                local player = game.Players.LocalPlayer
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    -- ตรวจสอบ CFrame ของ part แบบไดนามิกเมื่อปุ่มถูกกด
+                    if part and part:IsDescendantOf(workspace) then
+                        player.Character.HumanoidRootPart.CFrame = lastCFrame -- ใช้ CFrame ล่าสุด
+                        print("Teleported to portal:", part.Name)
+                    else
+                        warn("Cannot teleport: Part '" .. part.Name .. "' no longer exists.")
+                    end
+                else
+                    warn("Cannot teleport: Player or HumanoidRootPart not found.")
+                end
+            end
+
+            -- สร้างปุ่มเพื่อ Teleport ไปยัง Portal
+            Section:NewButton("Teleport to Portal: " .. part.Name, "Teleport to " .. part.Name, function()
+                -- เรียกฟังก์ชันเทเลพอทเพียงครั้งเดียว
+                teleportToPart()
+            end)
+
+            -- เช็คการเปลี่ยนแปลง CFrame ของ part ตลอดเวลา
+            game:GetService("RunService").Heartbeat:Connect(function()
+                if part and part:IsDescendantOf(workspace) then
+                    -- ตรวจสอบว่า CFrame ของ part เปลี่ยนแปลงหรือไม่
+                    if part.CFrame ~= lastCFrame then
+                        -- ถ้ามีการเปลี่ยนแปลง CFrame ของ part
+                        print("Portal position changed to: " .. tostring(part.CFrame))
+
+                        -- อัปเดต CFrame ของ part ใหม่
+                        lastCFrame = part.CFrame
+                    end
+                end
+            end)
+        end
+    end
+end
 
 local locations = {
     ["1"] = Vector3.new(168.127258, 42.0343094, 2320.65503, -0.965930343, 8.44340975e-05, 0.258802176, 8.28687844e-05, 1, -1.69574414e-05, -0.258802176, 5.06691504e-06, -0.965930343),
