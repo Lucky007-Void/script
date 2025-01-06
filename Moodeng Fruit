@@ -24,7 +24,8 @@ local systems = {
             workspace.Map.Mon:FindFirstChild("50000-100000"),
             workspace.Map.Mon:FindFirstChild("Event"),
             workspace.Map.Mon:FindFirstChild("People"),
-            workspace.Map.Mon:FindFirstChild("Slime")
+            workspace.Map.Mon:FindFirstChild("Slime"),
+        }
     },
     Dungeon = {
         dropdown = nil,
@@ -32,7 +33,7 @@ local systems = {
         uniqueMonsters = {},
         isAutoTeleportActive = false,
         monFolders = {
-            workspace.Wave_Folders:FindFirstChild("Npcs")
+            workspace.Wave_Folders:FindFirstChild("Npcs"),
         }
     }
 }
