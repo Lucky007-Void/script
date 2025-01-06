@@ -90,6 +90,7 @@ local function teleportToMonster(system)
                         local character = player.Character
                         if character and character:FindFirstChild("HumanoidRootPart") then
                             local humanoidRootPart = character.HumanoidRootPart
+							local humanoid = character.Humanoid
                             local monsterRootPart = monster:FindFirstChild("HumanoidRootPart")
 
                             -- คำนวณตำแหน่งด้านหลังมอนสเตอร์
@@ -115,27 +116,31 @@ local function teleportToMonster(system)
     print("Monster not found:", config.selectedMonster)
 end
 
-
-
 local TweenService = game:GetService("TweenService")
 
 local function teleportMonstersToSelectedMonster(system)
     local config = systems[system]
-    if not config or not config.selectedMonster then return end
+    if not config or not config.selectedMonster then
+        return
+    end
 
     local monstersFolder = system == "Mon" and config.monFolders or {config.enemiesFolderPath}
 
+    -- Hitbox configuration
     local hitboxConfig = {
         size = Vector3.new(10, 30, 10),
-        transparency = 0.8,
+        transparency = 0.9,
         color = BrickColor.new("Really black"),
         material = Enum.Material.Neon,
         canCollide = false
     }
 
+    -- Iterate through folders to find the target monster
     for _, folder in pairs(monstersFolder) do
         if folder and folder:IsA("Folder") then
             local targetMonster = nil
+
+            -- Find the target monster by name
             for _, monster in pairs(folder:GetChildren()) do
                 if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
                     targetMonster = monster
@@ -146,36 +151,57 @@ local function teleportMonstersToSelectedMonster(system)
             if targetMonster then
                 local targetPosition = targetMonster.HumanoidRootPart.Position
 
+                -- Teleport all matching monsters in the folder
                 for _, monster in pairs(folder:GetChildren()) do
-                    if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
+                    if monster:IsA("Model") and monster:FindFirstChild("HumanoidRootPart") then
                         local humanoid = monster:FindFirstChildOfClass("Humanoid")
                         if humanoid then
-                            -- Disable movement and jumping
+                            -- Disable monster movement
                             humanoid.WalkSpeed = 0
                             humanoid.JumpPower = 0
+
+                            -- Tween to target position
+                            local otherHumanoidRootPart = monster.HumanoidRootPart
+                            local tweenInfo = TweenInfo.new(0, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                            local tweenGoal = {CFrame = CFrame.new(targetPosition)}
+                            local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
+                            tween:Play()
+
+                            -- Configure hitbox properties
+                            otherHumanoidRootPart.Size = hitboxConfig.size
+                            otherHumanoidRootPart.Transparency = hitboxConfig.transparency
+                            otherHumanoidRootPart.CanCollide = hitboxConfig.canCollide
+                            otherHumanoidRootPart.Anchored = true
+                            otherHumanoidRootPart.BrickColor = hitboxConfig.color
+                            otherHumanoidRootPart.Material = hitboxConfig.material
+
+                            -- Disable damage from HumanoidRootPart
+                            otherHumanoidRootPart.Touched:Connect(function(hit)
+                                if hit and hit:IsA("BasePart") then
+                                    local parent = hit.Parent
+                                    if parent and parent:IsA("Model") then
+                                        local humanoid = parent:FindFirstChildOfClass("Humanoid")
+                                        if humanoid then
+                                            -- Cancel damage or interaction here if needed
+                                            return
+                                        end
+                                    end
+                                end
+                            end)
                         end
-
-                        local otherHumanoidRootPart = monster.HumanoidRootPart
-                        local tweenInfo = TweenInfo.new(0, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
-                        local tweenGoal = {CFrame = CFrame.new(targetPosition)}
-                        local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
-                        tween:Play()
-
-                        otherHumanoidRootPart.Size = hitboxConfig.size
-                        otherHumanoidRootPart.Transparency = hitboxConfig.transparency
-                        otherHumanoidRootPart.CanCollide = hitboxConfig.canCollide
-						otherHumanoidRootPart.Anchored = true
-                        otherHumanoidRootPart.BrickColor = hitboxConfig.color
-                        otherHumanoidRootPart.Material = hitboxConfig.material
                     end
                 end
                 print("Teleported all monsters with the same name to:", config.selectedMonster)
             else
-                print("Monster not found in folder:", folder.Name, "Monster Name:", config.selectedMonster)
+                print("Target monster not found in folder:", folder.Name, "Monster Name:", config.selectedMonster)
             end
         end
     end
 end
+
+
+
+
 
 -- Function to auto-click (without using the mouse directly)
 local VirtualUser = game:GetService("VirtualUser")
@@ -201,6 +227,9 @@ for system, config in pairs(systems) do
         if state then
             print("Auto teleport (" .. system .. ") activated")
             while config.isAutoTeleportActive do
+			    local player = game.Players.LocalPlayer
+                local character = player.Character
+			    local humanoidRootPart = character.HumanoidRootPart
                 teleportToMonster(system)
 				teleportMonstersToSelectedMonster(system)
                 task.wait(0) -- Adjusted to 1 second to avoid high CPU load
@@ -356,57 +385,13 @@ end)
 local Tab = Window:NewTab("Teleport")
 local Section = Tab:NewSection("Teleport")
 
-local folderName = "Portal"
-local folder = workspace.Map:FindFirstChild(folderName) -- ค้นหาโฟลเดอร์ใน Workspace
+local TeleportService = game:GetService("TeleportService")
 
--- ตรวจสอบว่ามีโฟลเดอร์หรือไม่
-if not folder then
-    warn("Folder '" .. folderName .. "' not found in workspace")
-else
-   -- สร้างปุ่มสำหรับ Teleport ไปยังแต่ละ Part ในโฟลเดอร์
-    for _, part in ipairs(folder:GetChildren()) do
-        if part:IsA("BasePart") then
-            -- ตัวแปรเก็บ CFrame ล่าสุดของ part
-            local lastCFrame = part.CFrame
-
-            -- สร้างฟังก์ชันเพื่อเทเลพอทไปที่ CFrame ของ part
-            local function teleportToPart()
-                local player = game.Players.LocalPlayer
-                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    -- ตรวจสอบ CFrame ของ part แบบไดนามิกเมื่อปุ่มถูกกด
-                    if part and part:IsDescendantOf(workspace) then
-                        player.Character.HumanoidRootPart.CFrame = lastCFrame -- ใช้ CFrame ล่าสุด
-                        print("Teleported to portal:", part.Name)
-                    else
-                        warn("Cannot teleport: Part '" .. part.Name .. "' no longer exists.")
-                    end
-                else
-                    warn("Cannot teleport: Player or HumanoidRootPart not found.")
-                end
-            end
-
-            -- สร้างปุ่มเพื่อ Teleport ไปยัง Portal
-            Section:NewButton("Teleport to Portal: " .. part.Name, "Teleport to " .. part.Name, function()
-                -- เรียกฟังก์ชันเทเลพอทเพียงครั้งเดียว
-                teleportToPart()
-            end)
-
-            -- เช็คการเปลี่ยนแปลง CFrame ของ part ตลอดเวลา
-            game:GetService("RunService").Heartbeat:Connect(function()
-                if part and part:IsDescendantOf(workspace) then
-                    -- ตรวจสอบว่า CFrame ของ part เปลี่ยนแปลงหรือไม่
-                    if part.CFrame ~= lastCFrame then
-                        -- ถ้ามีการเปลี่ยนแปลง CFrame ของ part
-                        print("Portal position changed to: " .. tostring(part.CFrame))
-
-                        -- อัปเดต CFrame ของ part ใหม่
-                        lastCFrame = part.CFrame
-                    end
-                end
-            end)
-        end
-    end
-end
+local Button = Section:NewButton("Go to Dun", "Click to teleport", function()
+    -- ใส่ PlaceID ที่ต้องการจะวาปไป
+    local placeId = 76091669089883  -- แทนที่ด้วย PlaceID ที่ต้องการ
+    TeleportService:Teleport(placeId)
+end)
 
 local locations = {
     ["1"] = Vector3.new(168.127258, 42.0343094, 2320.65503, -0.965930343, 8.44340975e-05, 0.258802176, 8.28687844e-05, 1, -1.69574414e-05, -0.258802176, 5.06691504e-06, -0.965930343),
