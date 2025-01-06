@@ -150,7 +150,7 @@ local function teleportMonstersToSelectedMonster(system)
                             humanoid.JumpPower = 0
 
                             local otherHumanoidRootPart = monster.HumanoidRootPart
-                            local tweenInfo = TweenInfo.new(config.tweenDuration or 1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                            local tweenInfo = TweenInfo.new(config.tweenDuration or 0, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
                             local tweenGoal = {CFrame = CFrame.new(targetPosition)}
                             local success, err = pcall(function()
                                 local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
