@@ -387,7 +387,7 @@ local Section = Tab:NewSection("Teleport")
 
 local TeleportService = game:GetService("TeleportService")
 
-local Button = Section:NewButton("Go to Dun", "Click to teleport", function()
+local Button = Section:NewButton("Teleport to Dungeon", "Click to teleport", function()
     -- ใส่ PlaceID ที่ต้องการจะวาปไป
     local placeId = 76091669089883  -- แทนที่ด้วย PlaceID ที่ต้องการ
     TeleportService:Teleport(placeId)
