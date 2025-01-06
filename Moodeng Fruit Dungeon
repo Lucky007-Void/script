@@ -113,7 +113,12 @@ local function teleportMonstersToSelectedMonster(system)
 
     local monstersFolder = system == "Mon" and config.monFolders or {config.enemiesFolderPath}
 
-    -- Hitbox configuration
+    -- ชื่อมอนสเตอร์ที่ต้องการยกเว้น
+    local excludedMonsters = {
+        ["Igris"] = true
+    }
+
+    -- การตั้งค่า Hitbox
     local hitboxConfig = {
         size = Vector3.new(10, 30, 10),
         transparency = 0.9,
@@ -122,12 +127,10 @@ local function teleportMonstersToSelectedMonster(system)
         canCollide = false
     }
 
-    -- Iterate through folders to find the target monster
     for _, folder in pairs(monstersFolder) do
         if folder and folder:IsA("Folder") then
             local targetMonster = nil
 
-            -- Find the target monster by name
             for _, monster in pairs(folder:GetChildren()) do
                 if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
                     targetMonster = monster
@@ -138,56 +141,45 @@ local function teleportMonstersToSelectedMonster(system)
             if targetMonster then
                 local targetPosition = targetMonster.HumanoidRootPart.Position
 
-                -- Teleport all matching monsters in the folder
                 for _, monster in pairs(folder:GetChildren()) do
-                    if monster:IsA("Model") and monster:FindFirstChild("HumanoidRootPart") then
+                    -- ตรวจสอบชื่อมอนสเตอร์เพื่อข้ามมอนสเตอร์ที่ต้องการยกเว้น
+                    if not excludedMonsters[monster.Name] and monster:IsA("Model") and monster:FindFirstChild("HumanoidRootPart") then
                         local humanoid = monster:FindFirstChildOfClass("Humanoid")
                         if humanoid then
-                            -- Disable monster movement
                             humanoid.WalkSpeed = 0
                             humanoid.JumpPower = 0
 
-                            -- Tween to target position
                             local otherHumanoidRootPart = monster.HumanoidRootPart
-                            local tweenInfo = TweenInfo.new(0, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                            local tweenInfo = TweenInfo.new(config.tweenDuration or 1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
                             local tweenGoal = {CFrame = CFrame.new(targetPosition)}
-                            local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
-                            tween:Play()
+                            local success, err = pcall(function()
+                                local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
+                                tween:Play()
+                            end)
+                            if not success then
+                                warn("Tween creation failed for " .. monster.Name .. ": " .. err)
+                            end
 
-                            -- Configure hitbox properties
                             otherHumanoidRootPart.Size = hitboxConfig.size
                             otherHumanoidRootPart.Transparency = hitboxConfig.transparency
                             otherHumanoidRootPart.CanCollide = hitboxConfig.canCollide
                             otherHumanoidRootPart.Anchored = true
                             otherHumanoidRootPart.BrickColor = hitboxConfig.color
                             otherHumanoidRootPart.Material = hitboxConfig.material
-
-                            -- Disable damage from HumanoidRootPart
-                            otherHumanoidRootPart.Touched:Connect(function(hit)
-                                if hit and hit:IsA("BasePart") then
-                                    local parent = hit.Parent
-                                    if parent and parent:IsA("Model") then
-                                        local humanoid = parent:FindFirstChildOfClass("Humanoid")
-                                        if humanoid then
-                                            -- Cancel damage or interaction here if needed
-                                            return
-                                        end
-                                    end
-                                end
-                            end)
                         end
+                    else
+                        print("Skipped monster:", monster.Name)
                     end
                 end
+
                 print("Teleported all monsters with the same name to:", config.selectedMonster)
+                break
             else
                 print("Target monster not found in folder:", folder.Name, "Monster Name:", config.selectedMonster)
             end
         end
     end
 end
-
-
-
 
 
 -- Function to auto-click (without using the mouse directly)
