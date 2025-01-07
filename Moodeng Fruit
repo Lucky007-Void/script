@@ -214,7 +214,7 @@ for system, config in pairs(systems) do
 			    local humanoidRootPart = character.HumanoidRootPart
                 teleportToMonster(system)
 				teleportMonstersToSelectedMonster(system)
-                task.wait(0) -- Adjusted to 1 second to avoid high CPU load
+                task.wait() -- Adjusted to 1 second to avoid high CPU load
             end
         else
             print("Auto teleport (" .. system .. ") deactivated")
