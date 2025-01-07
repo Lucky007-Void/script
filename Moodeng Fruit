@@ -419,6 +419,39 @@ else
     end
 end
 
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
+-- PlaceID ของเกมที่ต้องการ
+local placeId = 76091669089883 -- เปลี่ยนเป็น PlaceID ของคุณ
+local function getSmallestServer()
+    local servers = {}
+    local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
+    local success, result = pcall(function()
+        return HttpService:JSONDecode(game:HttpGet(url))
+    end)
+    
+    if success and result and result.data then
+        for _, server in pairs(result.data) do
+            if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                return server.id
+            end
+        end
+    end
+    
+    return nil -- ถ้าไม่มีเซิร์ฟเวอร์ที่เหมาะสม
+end
+
+local Button = Section:NewButton("Teleport to Portal V2", "Find and join an empty server", function()
+    local serverId = getSmallestServer()
+    if serverId then
+        TeleportService:TeleportToPlaceInstance(placeId, serverId)
+    else
+        print("No suitable server found. Creating a new one.")
+        TeleportService:Teleport(placeId) -- สร้างเซิร์ฟเวอร์ใหม่
+    end
+end)
+
 local locations = {
     ["Starter"] = Vector3.new(168.127258, 42.0343094, 2320.65503, -0.965930343, 8.44340975e-05, 0.258802176, 8.28687844e-05, 1, -1.69574414e-05, -0.258802176, 5.06691504e-06, -0.965930343),
     ["Event"] = Vector3.new(942.362427, -2.25993347, 1710.93201, 0.422592998, -0, -0.906319618, 0, 1, -0, 0.906319618, 0, 0.422592998),
