@@ -1,0 +1,109 @@
+local Player = game:GetService("Players")
+local LocalPlayer = Player.LocalPlayer
+local Char = LocalPlayer.Character
+local Humanoid = Char.Humanoid
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GuiService = game:GetService("GuiService")
+
+equipitem = function(v)
+if LocalPlayer.Backpack:FindFirstChild(v) then
+    local a = LocalPlayer.Backpack:FindFirstChild(v)
+        Humanoid:EquipTool(a)
+    end
+end
+
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("LuckyXHub Fisch", "DarkTheme")
+local Tab = Window:NewTab("Main")
+local Section = Tab:NewSection("Main")
+
+-- AutoCast
+Section:NewToggle("AutoCast", "", function(v)
+_G.AutoCast = v
+     pcall(function()
+while _G.AutoCast do wait()
+    local Rod = Char:FindFirstChildOfClass("Tool")
+                task.wait(.1)
+                    Rod.events.cast:FireServer(100,1)
+        end
+    end)
+end)
+
+Section:NewToggle("AutoShake", "", function(v)
+    _G.AutoShake = v
+    pcall(function()
+        while _G.AutoShake do
+            wait()
+            task.wait(0)
+            local PlayerGUI = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+            local shakeUI = PlayerGUI:FindFirstChild("shakeui")
+            if shakeUI and shakeUI.Enabled then
+                local safezone = shakeUI:FindFirstChild("safezone")
+                if safezone then
+                    local button = safezone:FindFirstChild("button")
+                    local VirtualUser = game:GetService("VirtualUser")
+                    if button and button:IsA("ImageButton") and button.Visible then
+                        -- ล็อคปุ่มให้อยู่ที่ตำแหน่งและขนาดที่กำหนด
+                        button.Size = UDim2.new(100,100,100,100)  -- ขนาดปุ่มที่กำหนด
+                        button.Position = UDim2.new(0,-700,0,-700)  -- ตำแหน่งปุ่มที่กำหนด
+                        
+                        VirtualUser:CaptureController()
+                        VirtualUser:ClickButton1(Vector2.new(100,100),CFrame.new(Vector3.new(0,0,0)))
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+
+-- AutoReel
+Section:NewToggle("AutoReel", "", function(v)
+     _G.AutoReel = v
+pcall(function()
+    while _G.AutoReel do wait()
+            for i,v in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+                if v:IsA "ScreenGui" and v.Name == "reel"then
+                    if v:FindFirstChild "bar" then
+                        wait(.15)
+                            ReplicatedStorage.events.reelfinished:FireServer(100,true)
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+-- equipitem
+spawn(function()
+    while wait() do
+        if _G.AutoCast then
+            pcall(function()
+                for i,v in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if v:IsA ("Tool") and v.Name:lower():find("rod") then
+                    equipitem(v.Name)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+local Tab = Window:NewTab("Misc")
+local Section = Tab:NewSection("Misc")
+
+Section:NewSlider("WalkSpeed", "", 500, 0, function(s) -- 500 (MaxValue) | 0 (MinValue)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
+
+Section:NewSlider("JumpPower", "", 500, 0, function(j) -- 500 (MaxValue) | 0 (MinValue)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = j
+end)
+
+local Tab = Window:NewTab("Setting")
+local Section = Tab:NewSection("Setting")
+Section:NewKeybind("on/off", "KeybindInfo", Enum.KeyCode.RightControl, function()
+  Library:ToggleUI()
+end)
