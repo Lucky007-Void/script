@@ -91,8 +91,8 @@ spawn(function()
     end
 end)
 
-local Tab = Window:NewTab("Misc")
-local Section = Tab:NewSection("Misc")
+local Tab = Window:NewTab("Character")
+local Section = Tab:NewSection("Character")
 
 Section:NewSlider("WalkSpeed", "", 500, 0, function(s) -- 500 (MaxValue) | 0 (MinValue)
     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
