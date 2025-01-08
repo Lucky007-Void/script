@@ -91,6 +91,86 @@ spawn(function()
     end
 end)
 
+local Tab = Window:NewTab("Teleport")
+local Section = Tab:NewSection("Teleport")
+
+local locations = {
+    ["Gole Fisch"] = Vector3.new(-2675.18604, 170.500015, 1742.26538, -0.302006811, 2.35316637e-08, 0.953305781, 8.5961112e-08, 1, 2.54816279e-09, -0.953305781, 8.27167881e-08, -0.302006811),
+    ["The Depths"] = Vector3.new(940.204407, -738.083374, 1457.24158, -0.987186491, 1.04138628e-07, 0.159570634, 1.00208609e-07, 1, -3.26754481e-08, -0.159570634, -1.62664087e-08, -0.987186491),
+	["Ice"] = Vector3.new(19877.373, 577.082947, 5643.15869, 0.823173165, -3.7063991e-08, 0.567790389, 5.15933394e-08, 1, -9.52158175e-09, -0.567790389, 3.71321143e-08, 0.823173165),
+	---------------------------------------------------------------------------------------
+	["Sundial"] = Vector3.new(-1148, 134.499985, -1075, 1, -3.65009427e-08, 1.02961487e-12, 3.65009427e-08, 1, -7.86415413e-08, -1.02674444e-12, 7.86415413e-08, 1),
+    ["Windset"] = Vector3.new(2849, 178.333237, 2702, 1, -2.76633845e-08, 1.41044318e-14, 2.76633845e-08, 1, -5.96006124e-08, -1.24556771e-14, 5.96006124e-08, 1),
+	["Smokescreen"] = Vector3.new(2789, 139.825485, -625, 1, 3.0796074e-10, 1.90512804e-14, -3.0796074e-10, 1, 6.63472055e-10, -1.90510754e-14, -6.63472055e-10, 1),
+	["Tempest"] = Vector3.new(35, 132.500015, 1943, 1, 2.00706598e-08, 9.3546522e-15, -2.00706598e-08, 1, 4.32411476e-08, -8.48677377e-15, -4.32411476e-08, 1),
+    ---------------------------------------------------------------------------------------
+	["Enchant"] = Vector3.new(1309.3783, -805.221191, -98.6691666, -0.99811554, -3.97737399e-09, -0.061362613, 3.56762037e-10, 1, -7.06205867e-08, 0.061362613, -7.0509401e-08, -0.99811554),
+    ["Marlin"] = Vector3.new(-932.087341, 226.001114, -990.367249, 0.945166051, 3.07437524e-08, -0.32659018, -4.91352203e-08, 1, -4.80638782e-08, 0.32659018, 6.14754256e-08, 0.945166051)
+}
+
+local selectedLocation = nil
+
+Section:NewDropdown("Select Zone", "Choose a place to teleport", {"Gold Fisch", "The Depths", "Ice"}, function(locationName)
+    selectedLocation = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
+end)
+
+Section:NewButton("Teleport Zone", "Teleport to the selected location", function()
+    if selectedLocation then
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation)
+            print("Teleported to:", selectedLocation)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
+        end
+    else
+        print("Please select a location first.")
+    end
+end)
+
+------------------------------------------------------------------------------------------------------------
+
+Section:NewDropdown("Select Totem", "Choose a place to teleport", {"Sundial", "Windset", "Smokescreen", "Tempest"}, function(locationName)
+    selectedLocation2 = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
+end)
+
+Section:NewButton("Teleport Totem", "Teleport to the selected location", function()
+    if selectedLocation2 then
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation2)
+            print("Teleported to:", selectedLocation2)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
+        end
+    else
+        print("Please select a location first.")
+    end
+end)
+
+------------------------------------------------------------------------------------------------------------
+
+Section:NewDropdown("Select Enchant", "Choose a place to teleport", {"Enchant", "Marlin"}, function(locationName)
+    selectedLocation3 = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
+end)
+
+Section:NewButton("Teleport Enchant", "Teleport to the selected location", function()
+    if selectedLocation3 then
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation3)
+            print("Teleported to:", selectedLocation3)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
+        end
+    else
+        print("Please select a location first.")
+    end
+end)
+
 local Tab = Window:NewTab("Character")
 local Section = Tab:NewSection("Character")
 
