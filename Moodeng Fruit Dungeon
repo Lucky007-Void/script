@@ -113,12 +113,7 @@ local function teleportMonstersToSelectedMonster(system)
 
     local monstersFolder = system == "Mon" and config.monFolders or {config.enemiesFolderPath}
 
-    -- ชื่อมอนสเตอร์ที่ต้องการยกเว้น
-    local excludedMonsters = {
-        ["Igris"] = true
-    }
-
-    -- การตั้งค่า Hitbox
+    -- Hitbox configuration
     local hitboxConfig = {
         size = Vector3.new(10, 30, 10),
         transparency = 0.9,
@@ -127,10 +122,12 @@ local function teleportMonstersToSelectedMonster(system)
         canCollide = false
     }
 
+    -- Iterate through folders to find and teleport matching monsters
     for _, folder in pairs(monstersFolder) do
         if folder and folder:IsA("Folder") then
             local targetMonster = nil
 
+            -- Find the target monster by name
             for _, monster in pairs(folder:GetChildren()) do
                 if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
                     targetMonster = monster
@@ -141,25 +138,23 @@ local function teleportMonstersToSelectedMonster(system)
             if targetMonster then
                 local targetPosition = targetMonster.HumanoidRootPart.Position
 
+                -- Teleport only matching monsters in the folder
                 for _, monster in pairs(folder:GetChildren()) do
-                    -- ตรวจสอบชื่อมอนสเตอร์เพื่อข้ามมอนสเตอร์ที่ต้องการยกเว้น
-                    if not excludedMonsters[monster.Name] and monster:IsA("Model") and monster:FindFirstChild("HumanoidRootPart") then
+                    if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
                         local humanoid = monster:FindFirstChildOfClass("Humanoid")
                         if humanoid then
+                            -- Disable monster movement
                             humanoid.WalkSpeed = 0
                             humanoid.JumpPower = 0
 
+                            -- Tween to target position
                             local otherHumanoidRootPart = monster.HumanoidRootPart
-                            local tweenInfo = TweenInfo.new(config.tweenDuration or 0, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                            local tweenInfo = TweenInfo.new(0, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
                             local tweenGoal = {CFrame = CFrame.new(targetPosition)}
-                            local success, err = pcall(function()
-                                local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
-                                tween:Play()
-                            end)
-                            if not success then
-                                warn("Tween creation failed for " .. monster.Name .. ": " .. err)
-                            end
+                            local tween = TweenService:Create(otherHumanoidRootPart, tweenInfo, tweenGoal)
+                            tween:Play()
 
+                            -- Configure hitbox properties
                             otherHumanoidRootPart.Size = hitboxConfig.size
                             otherHumanoidRootPart.Transparency = hitboxConfig.transparency
                             otherHumanoidRootPart.CanCollide = hitboxConfig.canCollide
@@ -167,20 +162,15 @@ local function teleportMonstersToSelectedMonster(system)
                             otherHumanoidRootPart.BrickColor = hitboxConfig.color
                             otherHumanoidRootPart.Material = hitboxConfig.material
                         end
-                    else
-                        print("Skipped monster:", monster.Name)
                     end
                 end
-
                 print("Teleported all monsters with the same name to:", config.selectedMonster)
-                break
             else
                 print("Target monster not found in folder:", folder.Name, "Monster Name:", config.selectedMonster)
             end
         end
     end
 end
-
 
 -- Function to auto-click (without using the mouse directly)
 local VirtualUser = game:GetService("VirtualUser")
