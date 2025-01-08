@@ -433,7 +433,8 @@ local function getSmallestServer()
     
     if success and result and result.data then
         for _, server in pairs(result.data) do
-            if server.playing < server.maxPlayers and server.id ~= game.JobId then
+            -- หาเซิร์ฟเวอร์ที่ไม่มีผู้เล่นเลย
+            if server.playing == 0 and server.id ~= game.JobId then
                 return server.id
             end
         end
