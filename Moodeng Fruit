@@ -80,40 +80,79 @@ local function teleportToMonster(system)
     end
 
     local monstersFolder = system == "Mon" and config.monFolders or {config.enemiesFolderPath}
+    local allSelectedMonstersDead = true -- Flag to check if selected monster is dead
+
+    -- เช็คเฉพาะมอนสเตอร์ที่เลือก
     for _, folder in pairs(monstersFolder) do
         if folder then
             for _, monster in pairs(folder:GetChildren()) do
                 if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
                     local humanoid = monster:FindFirstChild("Humanoid")
                     if humanoid and humanoid.Health > 0 then
-                        local player = game.Players.LocalPlayer
-                        local character = player.Character
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            local humanoidRootPart = character.HumanoidRootPart
-							local humanoid = character.Humanoid
-                            local monsterRootPart = monster:FindFirstChild("HumanoidRootPart")
-
-                            -- คำนวณตำแหน่งด้านหลังมอนสเตอร์
-                            local behindPosition = monsterRootPart.CFrame * CFrame.new(0, 10, 0) -- อยู่ด้านบนมอนสเตอร์ 15 หน่วย
-                            
-                            -- ย้าย HumanoidRootPart ไปยังตำแหน่งใหม่ และหันหน้าไปหามอนสเตอร์
-                            humanoidRootPart.CFrame = CFrame.lookAt(behindPosition.Position, monsterRootPart.Position)
-
-                            print("Teleported to and facing:", config.selectedMonster)
-                            return
-                        else
-                            warn("Character or HumanoidRootPart not found.")
-                        end
-                    else
-                        print("Monster is dead, looking for another monster...")
+                        allSelectedMonstersDead = false -- มอนสเตอร์ที่เลือกยังไม่ตาย
+                        break
                     end
                 end
             end
-        else
-            warn("Folder not found in monstersFolder.")
         end
     end
-    print("Monster not found:", config.selectedMonster)
+
+    -- ถ้ามอนสเตอร์ที่เลือกตายหมดแล้ว
+    if allSelectedMonstersDead then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local humanoidRootPart = character.HumanoidRootPart
+
+            -- กำหนดตำแหน่งที่ต้องการให้ตัวละครวาปไป
+            local targetCFrame = CFrame.new(168.124344, 44.5330048, 2320.65503, 1, -3.80802341e-08, 7.65281002e-05, 3.80796195e-08, 1, 8.02595945e-09, -7.65281002e-05, -8.02304534e-09, 1)  -- ตัวอย่างตำแหน่ง (สามารถเปลี่ยนแปลงได้ตามต้องการ)
+
+            -- วาปตัวละครไปที่ตำแหน่งที่กำหนด
+            humanoidRootPart.CFrame = targetCFrame
+
+            -- ตั้งค่า Anchored ให้กับ HumanoidRootPart ของตัวละคร
+            humanoidRootPart.Anchored = true
+
+            print("Selected monster is dead. Teleported to the target position.")
+        else
+            warn("Character or HumanoidRootPart not found.")
+        end
+    else
+        -- ถ้ามอนสเตอร์ที่เลือกยังไม่ตาย, ทำการวาปไปที่มอนสเตอร์
+        for _, folder in pairs(monstersFolder) do
+            if folder then
+                for _, monster in pairs(folder:GetChildren()) do
+                    if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
+                        local humanoid = monster:FindFirstChild("Humanoid")
+                        if humanoid and humanoid.Health > 0 then
+                            local player = game.Players.LocalPlayer
+                            local character = player.Character
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                local humanoidRootPart = character.HumanoidRootPart
+                                local monsterRootPart = monster.HumanoidRootPart
+
+                                -- คำนวณตำแหน่งด้านหลังมอนสเตอร์ (เช่น 15 หน่วยด้านบนของมอนสเตอร์)
+                                local behindPosition = monsterRootPart.CFrame * CFrame.new(0, 10, 0) -- ปรับค่าตามต้องการ
+
+                                -- วาปตัวละครไปที่ตำแหน่งใหม่และหันหน้าไปหามอนสเตอร์
+                                humanoidRootPart.CFrame = CFrame.lookAt(behindPosition.Position, monsterRootPart.Position)
+
+                                print("Teleported to and facing:", config.selectedMonster)
+                                return
+                            else
+                                warn("Character or HumanoidRootPart not found.")
+                            end
+                        else
+                            print("Monster is dead, looking for another monster...")
+                        end
+                    end
+                end
+            else
+                warn("Folder not found in monstersFolder.")
+            end
+        end
+        print("Monster not found:", config.selectedMonster)
+    end
 end
 
 local TweenService = game:GetService("TweenService")
@@ -155,6 +194,7 @@ local function teleportMonstersToSelectedMonster(system)
                 for _, monster in pairs(folder:GetChildren()) do
                     if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
                         local humanoid = monster:FindFirstChildOfClass("Humanoid")
+						local Head = monster:FindFirstChildOfClass("Head")
                         if humanoid then
                             -- Disable monster movement
                             humanoid.WalkSpeed = 0
@@ -208,14 +248,33 @@ for system, config in pairs(systems) do
         config.isAutoTeleportActive = state
         if state then
             print("Auto teleport (" .. system .. ") activated")
-            while config.isAutoTeleportActive do
-			    local player = game.Players.LocalPlayer
-                local character = player.Character
-			    local humanoidRootPart = character.HumanoidRootPart
-                teleportToMonster(system)
-				teleportMonstersToSelectedMonster(system)
-                task.wait() -- Adjusted to 1 second to avoid high CPU load
-            end
+            
+            -- Run auto teleport in a separate coroutine to allow toggle functionality
+            spawn(function()
+                while config.isAutoTeleportActive do
+                    teleportToMonster(system)
+                    teleportMonstersToSelectedMonster(system)
+                    task.wait() -- Wait 1 second to avoid high CPU load
+                    
+                    -- การจัดการ Anchored
+                    local player = game.Players.LocalPlayer
+                    local character = player.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local humanoidRootPart = character.HumanoidRootPart
+                        if toggle then
+                            -- ตั้งค่า Anchored = true เมื่อ toggle เปิด
+                            humanoidRootPart.Anchored = true
+                            print("Anchored enabled.")
+                        else
+                            -- ตั้งค่า Anchored = false เมื่อ toggle ปิด
+                            humanoidRootPart.Anchored = false
+                            print("Anchored disabled.")
+                        end
+                    else
+                        print("Character or HumanoidRootPart not found.")
+                    end
+                end
+            end)
         else
             print("Auto teleport (" .. system .. ") deactivated")
         end
@@ -239,6 +298,69 @@ task.spawn(function()
         updateMonsterList("Boss")
         updateMonsterList("Mon")
         task.wait(1) -- Adjusted to 1 second to avoid high CPU load
+    end
+end)
+
+local Section = Tab:NewSection("Auto")
+
+-- หาตำแหน่ง NPC (สมมติว่า NPC มีชื่อว่า "NPCName")
+local NpcFruit = game.Workspace.Map.Shop:WaitForChild("KruBa [250K Money]")
+local NpcFruitGem = game.Workspace.Map.Shop:WaitForChild("KruBa [250K Gem]")
+local NpcRace = game.Workspace.Map.Shop:WaitForChild("Pirate Squid [5K Gem]")
+
+-- ฟังก์ชันในการวาปไปที่ NPC
+local function teleportNpcFruit()
+    -- วาปไปที่ NPC
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = NpcFruit.HumanoidRootPart.CFrame
+end
+
+local function teleportNpcFruitGemGem()
+    -- วาปไปที่ NPC
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = NpcFruitGem.HumanoidRootPart.CFrame
+end
+
+local function teleportNpcRace()
+    wait(5)
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = NpcRace.HumanoidRootPart.CFrame
+
+end
+
+local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
+
+local autoPressEEnabled = false -- สถานะเปิด/ปิด Auto Press E
+
+-- ฟังก์ชันกดปุ่ม E อัตโนมัติ
+local function autoPressE()
+    while autoPressEEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game) -- กดปุ่ม E
+        task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game) -- ปล่อยปุ่ม E
+        task.wait(0.1) -- เวลาระหว่างการกด (ปรับค่าได้)
+    end
+end
+
+-- สร้าง Toggle เพื่อเปิด/ปิดฟังก์ชันนี้
+Section:NewToggle("Auto Random Fruit [Money]", "Random Fruit", function(state)
+    autoPressEEnabled = state
+    if state then
+        task.spawn(teleportNpcFruit)
+		task.spawn(autoPressE)
+    end
+end)
+
+Section:NewToggle("Auto Random Fruit [Gem]", "Random Fruit", function(state)
+    autoPressEEnabled = state
+    if state then
+        task.spawn(teleportNpcFruitGem)
+		task.spawn(autoPressE)
+    end
+end)
+
+Section:NewToggle("Auto Random Race", "Enable/Disable auto pressing X", function(state)
+    autoPressEEnabled = state
+    if state then
+        task.spawn(teleportNpcRace)
+		task.spawn(autoPressE)
     end
 end)
 
@@ -471,9 +593,8 @@ local selectedLocation = nil
 Section:NewDropdown("Select Location", "Choose a place to teleport", {"Starter", "Event", "Boss", "Femto", "Okarun", "Shadow Jungle", "Hoshi Village", "Factory", "Admin", "Town"}, function(locationName)
     selectedLocation = locations[locationName] -- เก็บตำแหน่งที่เลือก
     print("Selected location:", locationName)
-end)
 
-Section:NewButton("Teleport", "Teleport to the selected location", function()
+    -- วาปไปยังตำแหน่งที่เลือกโดยอัตโนมัติ
     if selectedLocation then
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -486,6 +607,38 @@ Section:NewButton("Teleport", "Teleport to the selected location", function()
         print("Please select a location first.")
     end
 end)
+
+-- ดึงข้อมูลมอนสเตอร์จาก Workspace:Enemies
+local Workspace = game:GetService("Workspace")
+local EnemiesFolder = Workspace.Map:FindFirstChild("Shop")
+
+-- ตรวจสอบว่ามีโฟลเดอร์ Enemies หรือไม่
+if EnemiesFolder then
+    local MonterNames = {}
+    local MonterObjects = {}
+
+    -- ดึงชื่อมอนสเตอร์และเก็บอ้างอิงไปที่วัตถุ
+    for _, monter in pairs(EnemiesFolder:GetChildren()) do
+        table.insert(MonterNames, monter.Name)
+        MonterObjects[monter.Name] = monter
+    end
+
+    -- สร้าง Dropdown
+    local Dropdown = Section:NewDropdown("Shop", "Teleport to Shop", MonterNames, function(selected)
+        -- เมื่อเลือกมอนสเตอร์แล้วให้วาปไปยังตำแหน่งของมัน
+        local selectedMonter = MonterObjects[selected]
+        
+        if selectedMonter and selectedMonter:FindFirstChild("HumanoidRootPart") then
+            -- วาปไปที่ตำแหน่งของมอนสเตอร์
+            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(selectedMonter.HumanoidRootPart.CFrame)
+        else
+            warn("มอนสเตอร์ไม่มี HumanoidRootPart หรือไม่พบมอนสเตอร์ที่เลือก")
+        end
+    end)
+else
+    warn("ไม่พบโฟลเดอร์ Enemies ใน Workspace")
+end
+
 
 local playersDropdown = {}  -- ตัวแปรเก็บรายชื่อผู้เล่นใน Dropdown
 
