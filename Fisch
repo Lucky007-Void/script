@@ -112,6 +112,7 @@ local selectedLocation = nil
 
 Section:NewDropdown("Select Zone", "Choose a place to teleport", {"Gold Fisch", "The Depths", "Ice"}, function(locationName)
     selectedLocation = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
 end)
 
 Section:NewButton("Teleport Zone", "Teleport to the selected location", function()
@@ -119,7 +120,12 @@ Section:NewButton("Teleport Zone", "Teleport to the selected location", function
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation)
+            print("Teleported to:", selectedLocation)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
         end
+    else
+        print("Please select a location first.")
     end
 end)
 
@@ -127,6 +133,7 @@ end)
 
 Section:NewDropdown("Select Totem", "Choose a place to teleport", {"Sundial", "Windset", "Smokescreen", "Tempest"}, function(locationName)
     selectedLocation2 = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
 end)
 
 Section:NewButton("Teleport Totem", "Teleport to the selected location", function()
@@ -134,7 +141,12 @@ Section:NewButton("Teleport Totem", "Teleport to the selected location", functio
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation2)
+            print("Teleported to:", selectedLocation2)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
         end
+    else
+        print("Please select a location first.")
     end
 end)
 
@@ -142,6 +154,7 @@ end)
 
 Section:NewDropdown("Select Enchant", "Choose a place to teleport", {"Enchant", "Marlin"}, function(locationName)
     selectedLocation3 = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
 end)
 
 Section:NewButton("Teleport Enchant", "Teleport to the selected location", function()
@@ -149,7 +162,12 @@ Section:NewButton("Teleport Enchant", "Teleport to the selected location", funct
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation3)
+            print("Teleported to:", selectedLocation3)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
         end
+    else
+        print("Please select a location first.")
     end
 end)
 
