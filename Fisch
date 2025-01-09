@@ -76,6 +76,14 @@ pcall(function()
     end)
 end)
 
+Section:NewToggle("Freeze Character", "Enable to Freeze Character", function(state)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.Anchored = state
+    end
+end)
+
 -- equipitem
 spawn(function()
     while wait() do
