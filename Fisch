@@ -76,10 +76,6 @@ pcall(function()
     end)
 end)
 
-Section:NewToggle("Freeze Character", "", function(v)
-    Char.HumanoidRootPart.Anchored = v
-end)
-
 -- equipitem
 spawn(function()
     while wait() do
