@@ -225,12 +225,15 @@ local function teleportMonstersToSelectedMonster(system)
     end
 end
 
--- Function to auto-click (without using the mouse directly)
 local VirtualUser = game:GetService("VirtualUser")
+
 local function autoClick()
     while _G.autoClickEnabled do
+        local screenSize = workspace.CurrentCamera.ViewportSize -- ดึงขนาดหน้าจอของผู้เล่น
+        local centerPosition = Vector2.new(screenSize.X / 2, screenSize.Y / 2) -- คำนวณตำแหน่งกลางหน้าจอ
+
         VirtualUser:CaptureController()
-        VirtualUser:ClickButton1(Vector2.new(0, 0)) -- จำลองการคลิกซ้ายที่ตำแหน่งหน้าจอ
+        VirtualUser:ClickButton1(centerPosition) -- คลิกที่ตำแหน่งกลางหน้าจอ
         task.wait(0.1) -- ปรับดีเลย์ระหว่างคลิก (ค่าแนะนำ: 0.1 วินาที)
     end
 end
@@ -303,6 +306,17 @@ end)
 
 local Section = Tab:NewSection("Auto")
 
+-- ใส่ทุก code
+local RedeemAllCode1 = {
+    [1] = "4klikes"
+}
+local RedeemAllCode2 = {
+    [1] = "sjw2"
+}
+local RedeemAllCode3 = {
+    [1] = "thx3mvisit"
+}
+
 -- หาตำแหน่ง NPC (สมมติว่า NPC มีชื่อว่า "NPCName")
 local NpcFruit = game.Workspace.Map.Shop:WaitForChild("KruBa [250K Money]")
 local NpcFruitGem = game.Workspace.Map.Shop:WaitForChild("KruBa [250K Gem]")
@@ -362,6 +376,13 @@ Section:NewToggle("Auto Random Race", "Enable/Disable auto pressing X", function
         task.spawn(teleportNpcRace)
 		task.spawn(autoPressE)
     end
+end)
+
+Section:NewButton("RedeemAllCode", "RedeemAllCode", function(state)
+    -- เรียกใช้ FireServer
+    game:GetService("ReplicatedStorage").RedeemCode:FireServer(unpack(RedeemAllCode1))
+    game:GetService("ReplicatedStorage").RedeemCode:FireServer(unpack(RedeemAllCode2))
+    game:GetService("ReplicatedStorage").RedeemCode:FireServer(unpack(RedeemAllCode3))
 end)
 
 local Section = Tab:NewSection("Auto Press")
@@ -698,6 +719,79 @@ task.spawn(function()
     while true do
         wait(1)  -- อัพเดททุก 1 วินาที
         refreshDropdown()
+    end
+end)
+
+local Tab = Window:NewTab("Stats")
+local Section = Tab:NewSection("Stats")
+
+-- ประกาศตัวแปรสำหรับการควบคุม Toggle และ Loop
+local toggle = false -- เริ่มต้น toggle ปิดอยู่
+local M = {
+    [1] = "Melee",
+    [2] = "100000"
+}
+
+local S = {
+    [1] = "Sword",
+    [2] = "100000"
+}
+
+local D = {
+    [1] = "Defense",
+    [2] = "100000"
+}
+
+local F = {
+    [1] = "DevilFruit",
+    [2] = "100000"
+}
+
+Section:NewToggle("Auto Melee", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").RemoteEvents.UpPoint:FireServer(unpack(M))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+Section:NewToggle("Auto Sword", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").RemoteEvents.UpPoint:FireServer(unpack(S))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+Section:NewToggle("Auto Defense", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").RemoteEvents.UpPoint:FireServer(unpack(D))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+Section:NewToggle("Auto DevilFruit", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").RemoteEvents.UpPoint:FireServer(unpack(F))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
     end
 end)
 
