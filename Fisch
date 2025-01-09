@@ -95,6 +95,7 @@ local Tab = Window:NewTab("Teleport")
 local Section = Tab:NewSection("Teleport")
 
 local locations = {
+	["Merchant"] = Vector3.new(464.740417, 150.62973, 229.492584, 0.999997377, 6.36884323e-10, 0.00229094876, -7.29497407e-10, 1, 4.04248119e-08, -0.00229094876, -4.04263751e-08, 0.999997377),
     ["Gole Fisch"] = Vector3.new(-2675.18604, 170.500015, 1742.26538, -0.302006811, 2.35316637e-08, 0.953305781, 8.5961112e-08, 1, 2.54816279e-09, -0.953305781, 8.27167881e-08, -0.302006811),
     ["The Depths"] = Vector3.new(940.204407, -738.083374, 1457.24158, -0.987186491, 1.04138628e-07, 0.159570634, 1.00208609e-07, 1, -3.26754481e-08, -0.159570634, -1.62664087e-08, -0.987186491),
     ["Ice"] = Vector3.new(19877.373, 577.082947, 5643.15869, 0.823173165, -3.7063991e-08, 0.567790389, 5.15933394e-08, 1, -9.52158175e-09, -0.567790389, 3.71321143e-08, 0.823173165),
@@ -116,6 +117,15 @@ local function teleport(location)
         print("Error: Player or HumanoidRootPart not found.")
     end
 end
+
+Section:NewDropdown("Select Shop", "Choose a place to teleport", {"Merchant", "Marlin"}, function(locationName)
+    local selectedLocation = locations[locationName]
+    if selectedLocation then
+        teleport(selectedLocation)
+    else
+        print("Invalid location selected.")
+    end
+end)
 
 -- Dropdowns
 Section:NewDropdown("Select Zone", "Choose a place to teleport", {"Gole Fisch", "The Depths", "Ice"}, function(locationName)
