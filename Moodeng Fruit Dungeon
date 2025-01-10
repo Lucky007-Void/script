@@ -255,6 +255,16 @@ local function getSmallestServer()
     return nil -- ถ้าไม่มีเซิร์ฟเวอร์ที่เหมาะสม
 end
 
+local Button = Section:NewButton("Teleport to Dungeon", "Find and join an empty server", function()
+    local serverId = getSmallestServer()
+    if serverId then
+        TeleportService:TeleportToPlaceInstance(placeId, serverId)
+    else
+        print("No suitable server found. Creating a new one.")
+        TeleportService:Teleport(placeId) -- สร้างเซิร์ฟเวอร์ใหม่
+    end
+end)
+
 local Section = Tab:NewSection("Auto Press")
 
 local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
