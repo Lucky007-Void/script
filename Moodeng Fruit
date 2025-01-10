@@ -308,13 +308,13 @@ local Section = Tab:NewSection("Auto")
 
 -- ใส่ทุก code
 local RedeemAllCode1 = {
-    [1] = "4klikes"
+    [1] = "ichigo"
 }
 local RedeemAllCode2 = {
-    [1] = "sjw2"
+    [1] = "kokushibo"
 }
 local RedeemAllCode3 = {
-    [1] = "thx3mvisit"
+    [1] = "newdungeon"
 }
 
 -- หาตำแหน่ง NPC (สมมติว่า NPC มีชื่อว่า "NPCName")
