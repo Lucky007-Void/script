@@ -436,14 +436,16 @@ local function autoPressE()
     end
 end
 
-function AutoHoldSquidCardTool(state)
-    if state then
+local RunService = game:GetService("RunService")
+
+function AutoHoldSquidCardTool()
+    RunService.Heartbeat:Connect(function()
         -- หาผลิตภัณฑ์ที่ชื่อ "Orb Blue" ใน Backpack
         local tools = game.Players.LocalPlayer.Backpack:GetChildren()
         local toolFound = nil
         
         for _, tool in pairs(tools) do
-            if tool.Name == "Orb Blue" then
+            if tool.Name == "Squid Card" then
                 toolFound = tool
                 break -- หยุดค้นหาหลังจากเจอเครื่องมือแรก
             end
@@ -451,7 +453,10 @@ function AutoHoldSquidCardTool(state)
         
         if toolFound then
             -- ย้ายเครื่องมือไปที่มือของตัวละคร
-            toolFound.Parent = game.Players.LocalPlayer.Character
+            if toolFound.Parent ~= game.Players.LocalPlayer.Character then
+                toolFound.Parent = game.Players.LocalPlayer.Character
+            end
+            
             -- ถ้าเครื่องมือมีฟังก์ชัน Activate ก็จะทำการเรียกใช้งาน
             if toolFound:FindFirstChild("Activate") then
                 toolFound:Activate()
@@ -459,12 +464,8 @@ function AutoHoldSquidCardTool(state)
         else
             print("ไม่พบเครื่องมือใน Backpack")
         end
-    else
-        print("สถานะการถือเครื่องมือเป็น false, เครื่องมือไม่ได้ถูกติดตั้ง")
-    end
+    end)
 end
-
-
 
 local VirtualUser = game:GetService("VirtualUser")
 
@@ -520,7 +521,7 @@ Section:NewToggle("Auto Store Squid Card", "Collect Squid Card", function(state)
     AutoStore = state -- อัพเดตสถานะของตัวแปรควบคุม
     if AutoStore then
         while AutoStore do
-            AutoHoldSquidCardTool(state)
+            AutoHoldSquidCardTool() 
             autoClick()
             wait() -- Add slight delay to avoid overloading
             clickScreen()
