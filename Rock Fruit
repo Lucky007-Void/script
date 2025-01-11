@@ -1,5 +1,5 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("LuckyXHub Rock Fruit", "DarkTheme")
+local Window = Library.CreateLib("LuckyXHub Moodeng Fruit", "DarkTheme")
 local Tab = Window:NewTab("Main")
 local Section = Tab:NewSection("Main")
 
@@ -267,10 +267,13 @@ for system, config in pairs(systems) do
     end)
 end
 
+local autoEquipEnabled = false
+
 Section:NewToggle("Auto Equip", "Enable/Disable auto-click at the center of the screen", function(state)
-    while true do
-    AutoHoldTool(state)
-    wait(5)
+    autoEquipEnabled = state
+    while autoEquipEnabled do
+        AutoHoldTool(state)
+        wait(1)
     end
 end)
 
@@ -307,7 +310,7 @@ local function autoPressZ()
         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Z, false, game) -- กดปุ่ม Z
         task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Z, false, game) -- ปล่อยปุ่ม Z
-        task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
+        task.wait(0.5)
     end
 end
 
@@ -429,18 +432,18 @@ local function autoPressE()
         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game) -- กดปุ่ม E
         task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game) -- ปล่อยปุ่ม E
-        task.wait(1) -- เวลาระหว่างการกด (ปรับค่าได้)
+        task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
     end
 end
 
 function AutoHoldSquidCardTool(state)
     if state then
-        -- หาผลิตภัณฑ์ที่ชื่อ "Square Mask" ใน Backpack
+        -- หาผลิตภัณฑ์ที่ชื่อ "Orb Blue" ใน Backpack
         local tools = game.Players.LocalPlayer.Backpack:GetChildren()
         local toolFound = nil
         
         for _, tool in pairs(tools) do
-            if tool.Name == "Squid Card" then
+            if tool.Name == "Orb Blue" then
                 toolFound = tool
                 break -- หยุดค้นหาหลังจากเจอเครื่องมือแรก
             end
@@ -461,10 +464,11 @@ function AutoHoldSquidCardTool(state)
     end
 end
 
+
+
 local VirtualUser = game:GetService("VirtualUser")
 
 local function autoClick()
-    VirtualUser:CaptureController()
     VirtualUser:ClickButton1(Vector2.new(100,100),CFrame.new(Vector3.new(0,0,0)))
 end
 
@@ -477,13 +481,14 @@ function clickScreen()
     local frame = dialogueGui:WaitForChild("Frame")
     local button = frame:FindFirstChild("3")
 
+    -- Adjust button size and position
     button.Size = UDim2.new(100,100,100,100)  -- ขนาดปุ่มที่กำหนด
     button.Position = UDim2.new(0,-700,0,-700)  -- ตำแหน่งปุ่มที่กำหนด
 
-    -- Simulate a click at the center of the screen
     VirtualUser:CaptureController()
     VirtualUser:ClickButton1(Vector2.new(100,100),CFrame.new(Vector3.new(0,0,0)))
 end
+
 
 local RandomF = {
     [1] = "Random",
@@ -509,14 +514,21 @@ function AutoHoldSandTool(state)
     end
 end
 
+local AutoStore = false -- ตัวแปรควบคุม
+
 Section:NewToggle("Auto Store Squid Card", "Collect Squid Card", function(state)
-    while true do
-        AutoHoldSquidCardTool(state)  -- เรียกใช้ฟังก์ชันการถือเครื่องมือ
-        autoClick()  -- คลิกอัตโนมัติ
-        wait()
-        clickScreen()  -- คลิกหน้าจอ
+    AutoStore = state -- อัพเดตสถานะของตัวแปรควบคุม
+    if AutoStore then
+        while AutoStore do
+            AutoHoldSquidCardTool(state)
+            autoClick()
+            wait() -- Add slight delay to avoid overloading
+            clickScreen()
+            wait()
+        end
     end
 end)
+
 
 
 -- กำหนด CFrame ที่ต้องการวาปไป
