@@ -1,0 +1,790 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("LuckyXHub Moodeng Fruit", "DarkTheme")
+local Tab = Window:NewTab("Main")
+local Section = Tab:NewSection("Main")
+
+local systems = {
+    Boss = {
+        dropdown = nil,
+        selectedMonster = nil,
+        uniqueMonsters = {},
+        isAutoTeleportActive = false,
+        enemiesFolderPath = workspace:FindFirstChild("Mob"), -- Replace with the actual folder path for System A
+        bossNames = {"Front Man"}, -- Example names of bosses
+    },
+    Mon = {
+        dropdown = nil,
+        selectedMonster = nil,
+        uniqueMonsters = {},
+        isAutoTeleportActive = false,
+        monFolders = {
+            workspace:FindFirstChild("Mob"),
+        }
+    },
+    Dungeon = {
+        dropdown = nil,
+        selectedDungeon = nil,
+        uniqueDungeons = {},
+        isAutoTeleportActive = false,
+        dungeonFolders = {
+            workspace:FindFirstChild("DunMob"),  -- Replace with the actual folder path for Dungeon system
+        }
+    }
+}
+
+-- Function to update monster list for each system
+local function updateMonsterList(system)
+    local config = systems[system]
+    if not config then
+        warn("System not found: " .. system)
+        return
+    end
+
+    local seenMonsters = {}
+    config.uniqueMonsters = {}
+
+    if system == "Mon" then
+        -- Check multiple folders for "Mon" system
+        for _, folder in pairs(config.monFolders) do
+            if folder then
+                for _, monster in pairs(folder:GetChildren()) do
+                    if monster:IsA("Model") and monster:FindFirstChild("HumanoidRootPart") and not seenMonsters[monster.Name] then
+                        table.insert(config.uniqueMonsters, monster.Name)
+                        seenMonsters[monster.Name] = true
+                    end
+                end
+            end
+        end
+    elseif system == "Boss" then
+        -- Check the single folder for "Boss" system
+        local enemiesFolder = config.enemiesFolderPath
+        if enemiesFolder then
+            for _, monster in pairs(enemiesFolder:GetChildren()) do
+                if monster:IsA("Model") and monster:FindFirstChild("HumanoidRootPart") and not seenMonsters[monster.Name] then
+                    -- Check if the monster name is in the boss list
+                    if table.find(config.bossNames, monster.Name) then
+                        table.insert(config.uniqueMonsters, monster.Name)  -- It's a boss
+                        seenMonsters[monster.Name] = true
+                    end
+                end
+            end
+        end
+    elseif system == "Dungeon" then
+        -- Check the multiple folders for "Dungeon" system
+        for _, folder in pairs(config.dungeonFolders) do
+            if folder then
+                for _, monster in pairs(folder:GetChildren()) do
+                    if monster:IsA("Model") and monster:FindFirstChild("HumanoidRootPart") and not seenMonsters[monster.Name] then
+                        table.insert(config.uniqueMonsters, monster.Name) -- Consider using uniqueDungeons if you want to separate them
+                        seenMonsters[monster.Name] = true
+                    end
+                end
+            end
+        end
+    end
+
+    -- Handle UI Refresh for each system
+    if system == "Mon" and config.dropdown then
+        config.dropdown:Refresh(config.uniqueMonsters)
+    elseif system == "Boss" and config.dropdown then
+        config.dropdown:Refresh(config.uniqueMonsters)
+    elseif system == "Dungeon" and config.dropdown then
+        config.dropdown:Refresh(config.uniqueMonsters)  -- Change to config.uniqueDungeons if desired
+    end
+end
+
+local TweenService = game:GetService("TweenService")
+
+local function teleportToMonster(system, targetPosition)
+    local config = systems[system]
+    if not config or not config.selectedMonster then
+        warn("Invalid system or no selected monster.")
+        return
+    end
+
+    -- เลือก folder ที่ใช้ตรวจสอบมอนสเตอร์ตามระบบ
+    local monstersFolder = nil
+    if system == "Mon" then
+        monstersFolder = config.monFolders
+    elseif system == "Boss" then
+        monstersFolder = {config.enemiesFolderPath}
+    elseif system == "Dungeon" then
+        monstersFolder = config.dungeonFolders
+    else
+        warn("Unknown system: " .. system)
+        return
+    end
+
+    local allSelectedMonstersDead = true -- Flag to check if selected monster is dead
+
+    -- เช็คเฉพาะมอนสเตอร์ที่เลือก
+    for _, folder in pairs(monstersFolder) do
+        if folder then
+            for _, monster in pairs(folder:GetChildren()) do
+                if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
+                    local humanoid = monster:FindFirstChild("Humanoid")
+                    if humanoid and humanoid.Health > 0 then
+                        allSelectedMonstersDead = false -- มอนสเตอร์ที่เลือกยังไม่ตาย
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    -- ถ้ามอนสเตอร์ที่เลือกตายหมดแล้ว
+    if allSelectedMonstersDead then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local humanoidRootPart = character.HumanoidRootPart
+
+            -- ถ้าตำแหน่งที่กำหนดไม่ใช่ nil, วาปไปที่ตำแหน่งนั้น
+            local targetCFrame = targetPosition or CFrame.new(168.124344, 44.5330048, 2320.65503) -- Default position
+
+            -- วาปตัวละครไปที่ตำแหน่งที่กำหนด
+            humanoidRootPart.CFrame = targetCFrame
+
+            -- ตั้งค่า Anchored ให้กับ HumanoidRootPart ของตัวละคร
+            humanoidRootPart.Anchored = true
+
+            print("Selected monster is dead. Teleported to the target position.")
+        else
+            warn("Character or HumanoidRootPart not found.")
+        end
+    else
+        -- ถ้ามอนสเตอร์ที่เลือกยังไม่ตาย, ทำการวาปไปที่มอนสเตอร์
+        for _, folder in pairs(monstersFolder) do
+            if folder then
+                for _, monster in pairs(folder:GetChildren()) do
+                    if monster:IsA("Model") and monster.Name == config.selectedMonster and monster:FindFirstChild("HumanoidRootPart") then
+                        local humanoid = monster:FindFirstChild("Humanoid")
+                        if humanoid and humanoid.Health > 0 then
+                            local player = game.Players.LocalPlayer
+                            local character = player.Character
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                local humanoidRootPart = character.HumanoidRootPart
+                                local monsterRootPart = monster.HumanoidRootPart
+
+                                -- คำนวณตำแหน่งด้านหลังมอนสเตอร์ (เช่น 15 หน่วยด้านบนของมอนสเตอร์)
+                                local behindPosition = monsterRootPart.CFrame * CFrame.new(0, 20, 0) -- ปรับค่าตามต้องการ
+
+                                -- วาปตัวละครไปที่ตำแหน่งใหม่และหันหน้าไปหามอนสเตอร์
+                                humanoidRootPart.CFrame = CFrame.lookAt(behindPosition.Position, monsterRootPart.Position)
+
+                                print("Teleported to and facing:", config.selectedMonster)
+                                return
+                            else
+                                warn("Character or HumanoidRootPart not found.")
+                            end
+                        else
+                            print("Monster is dead, looking for another monster...")
+                        end
+                    end
+                end
+            else
+                warn("Folder not found in monstersFolder.")
+            end
+        end
+        print("Monster not found:", config.selectedMonster)
+    end
+end
+
+function AutoHoldTool(state)
+    if state then
+        -- Find the tool in the player's Backpack
+        local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Tanjiro") -- Ensure tool name is correct
+        if tool then
+            -- Move the tool to the character's hand (assuming the tool is a model with an appropriate handle)
+            tool.Parent = game.Players.LocalPlayer.Character
+            -- Assuming tool has an Activate function (custom tools might have it)
+            if tool:FindFirstChild("Activate") then
+                tool:Activate()
+            end
+        else
+            print("Tool not found in Backpack")
+        end
+    else
+        print("Tool holding state is false, tool not equipped")
+    end
+end
+
+local VirtualUser = game:GetService("VirtualUser")
+
+local function autoClick()
+    while _G.autoClickEnabled do
+        local screenSize = workspace.CurrentCamera.ViewportSize -- ดึงขนาดหน้าจอของผู้เล่น
+        local centerPosition = Vector2.new(screenSize.X / 2, screenSize.Y / 2) -- คำนวณตำแหน่งกลางหน้าจอ
+
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton1(centerPosition) -- คลิกที่ตำแหน่งกลางหน้าจอ
+        task.wait(0.1) -- ปรับดีเลย์ระหว่างคลิก (ค่าแนะนำ: 0.1 วินาที)
+    end
+end
+
+-- Setup Dropdowns and Toggles for both Boss and Mon systems in the same section
+for system, config in pairs(systems) do
+    -- Dropdown for selecting monster
+    config.dropdown = Section:NewDropdown("Select Monster (" .. system .. ")", "Choose a monster to teleport to for " .. system, config.uniqueMonsters, function(selected)
+        config.selectedMonster = selected
+        print("Selected Monster (" .. system .. "):", selected)
+    end)
+
+    -- Toggle for auto teleporting
+    Section:NewToggle("Auto Teleport (" .. system .. ")", "Enable/Disable auto teleport for System " .. system, function(state)
+        config.isAutoTeleportActive = state
+        if state then
+            print("Auto teleport (" .. system .. ") activated")
+            
+            -- Run auto teleport in a separate coroutine to allow toggle functionality
+            spawn(function()
+                while config.isAutoTeleportActive do
+                    teleportToMonster(system)
+                    task.wait(0.01) -- Wait 1 second to avoid high CPU load
+                    
+                    -- การจัดการ Anchored
+                    local player = game.Players.LocalPlayer
+                    local character = player.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local humanoidRootPart = character.HumanoidRootPart
+                        if toggle then
+                            -- ตั้งค่า Anchored = true เมื่อ toggle เปิด
+                            humanoidRootPart.Anchored = true
+                            print("Anchored enabled.")
+                        else
+                            -- ตั้งค่า Anchored = false เมื่อ toggle ปิด
+                            humanoidRootPart.Anchored = false
+                            print("Anchored disabled.")
+                        end
+                    else
+                        print("Character or HumanoidRootPart not found.")
+                    end
+                end
+            end)
+        else
+            print("Auto teleport (" .. system .. ") deactivated")
+        end
+    end)
+end
+
+Section:NewToggle("Auto Equip", "Enable/Disable auto-click at the center of the screen", function(state)
+    while true do
+    AutoHoldTool(state)
+    wait(5)
+    end
+end)
+
+-- Toggle for Auto Click
+Section:NewToggle("Auto Click", "Enable/Disable auto-click at the center of the screen", function(state)
+    _G.autoClickEnabled = state
+    if state then
+        print("Auto-click activated")
+        task.spawn(autoClick) -- เริ่ม Auto Click ใน Task แยก
+    else
+        print("Auto-click deactivated")
+    end
+end)
+
+-- Refresh the monster lists every second for both Boss and Mon systems
+task.spawn(function()
+    while true do
+        updateMonsterList("Boss")
+        updateMonsterList("Mon")
+        updateMonsterList("Dungeon")
+        task.wait(1) -- Adjusted to 1 second to avoid high CPU load
+    end
+end)
+
+local Section = Tab:NewSection("Auto Press")
+
+local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
+
+local autoPressEEnabled = false -- สถานะเปิด/ปิด Auto Press Z
+
+-- ฟังก์ชันกดปุ่ม Z อัตโนมัติ
+local function autoPressZ()
+    while autoPressEEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Z, false, game) -- กดปุ่ม Z
+        task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Z, false, game) -- ปล่อยปุ่ม Z
+        task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
+    end
+end
+
+local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
+
+local autoPressXEnabled = false -- สถานะเปิด/ปิด Auto Press X
+
+-- ฟังก์ชันกดปุ่ม X อัตโนมัติ
+local function autoPressX()
+    while autoPressXEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.X, false, game) -- กดปุ่ม X
+        task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.X, false, game) -- ปล่อยปุ่ม X
+        task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
+    end
+end
+
+local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
+
+local autoPressCEnabled = false -- สถานะเปิด/ปิด Auto Press C
+
+-- ฟังก์ชันกดปุ่ม C อัตโนมัติ
+local function autoPressC()
+    while autoPressCEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.C, false, game) -- กดปุ่ม C
+        task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.C, false, game) -- ปล่อยปุ่ม C
+        task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
+    end
+end
+
+local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
+
+local autoPressVEnabled = false -- สถานะเปิด/ปิด Auto Press V
+
+-- ฟังก์ชันกดปุ่ม V อัตโนมัติ
+local function autoPressV()
+    while autoPressVEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.V, false, game) -- กดปุ่ม V
+        task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.V, false, game) -- ปล่อยปุ่ม V
+        task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
+    end
+end
+
+local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
+
+local autoPressBEnabled = false -- สถานะเปิด/ปิด Auto Press B
+
+-- ฟังก์ชันกดปุ่ม B อัตโนมัติ
+local function autoPressB()
+    while autoPressBEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.B, false, game) -- กดปุ่ม B
+        task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.B, false, game) -- ปล่อยปุ่ม B
+        task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
+    end
+end
+
+Section:NewToggle("Auto Z", "Enable/Disable auto pressing Z", function(state)
+    autoPressZEnabled = state
+    if state then
+        print("Auto Z Activated")
+        task.spawn(autoPressZ)
+    else
+        print("Auto Z Deactivated")
+    end
+end)
+
+Section:NewToggle("Auto X", "Enable/Disable auto pressing X", function(state)
+    autoPressXEnabled = state
+    if state then
+        print("Auto X Activated")
+        task.spawn(autoPressX)
+    else
+        print("Auto X Deactivated")
+    end
+end)
+
+Section:NewToggle("Auto C", "Enable/Disable auto pressing C", function(state)
+    autoPressCEnabled = state
+    if state then
+        print("Auto C Activated")
+        task.spawn(autoPressC)
+    else
+        print("Auto C Deactivated")
+    end
+end)
+
+Section:NewToggle("Auto V", "Enable/Disable auto pressing V", function(state)
+    autoPressVEnabled = state
+    if state then
+        print("Auto V Activated")
+        task.spawn(autoPressV)
+    else
+        print("Auto V Deactivated")
+    end
+end)
+
+Section:NewToggle("Auto B", "Enable/Disable auto pressing B", function(state)
+    autoPressBEnabled = state
+    if state then
+        print("Auto B Activated")
+        task.spawn(autoPressB)
+    else
+        print("Auto B Deactivated")
+    end
+end)
+
+local Tab = Window:NewTab("Auto")
+local Section = Tab:NewSection("Auto")
+
+local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
+local autoPressEEnabled = false -- สถานะเปิด/ปิด Auto Press E
+
+-- ฟังก์ชันกดปุ่ม E อัตโนมัติ
+local function autoPressE()
+    while autoPressEEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game) -- กดปุ่ม E
+        task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game) -- ปล่อยปุ่ม E
+        task.wait(1) -- เวลาระหว่างการกด (ปรับค่าได้)
+    end
+end
+
+function AutoHoldSquidCardTool(state)
+    if state then
+        -- หาผลิตภัณฑ์ที่ชื่อ "Square Mask" ใน Backpack
+        local tools = game.Players.LocalPlayer.Backpack:GetChildren()
+        local toolFound = nil
+        
+        for _, tool in pairs(tools) do
+            if tool.Name == "Squid Card" then
+                toolFound = tool
+                break -- หยุดค้นหาหลังจากเจอเครื่องมือแรก
+            end
+        end
+        
+        if toolFound then
+            -- ย้ายเครื่องมือไปที่มือของตัวละคร
+            toolFound.Parent = game.Players.LocalPlayer.Character
+            -- ถ้าเครื่องมือมีฟังก์ชัน Activate ก็จะทำการเรียกใช้งาน
+            if toolFound:FindFirstChild("Activate") then
+                toolFound:Activate()
+            end
+        else
+            print("ไม่พบเครื่องมือใน Backpack")
+        end
+    else
+        print("สถานะการถือเครื่องมือเป็น false, เครื่องมือไม่ได้ถูกติดตั้ง")
+    end
+end
+
+local VirtualUser = game:GetService("VirtualUser")
+
+local function autoClick()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton1(Vector2.new(100,100),CFrame.new(Vector3.new(0,0,0)))
+end
+
+
+local VirtualUser = game:GetService("VirtualUser")
+
+function clickScreen()
+    local player = game.Players.LocalPlayer
+    local dialogueGui = player.PlayerGui:WaitForChild("Dialogue")
+    local frame = dialogueGui:WaitForChild("Frame")
+    local button = frame:FindFirstChild("3")
+
+    button.Size = UDim2.new(100,100,100,100)  -- ขนาดปุ่มที่กำหนด
+    button.Position = UDim2.new(0,-700,0,-700)  -- ตำแหน่งปุ่มที่กำหนด
+
+    -- Simulate a click at the center of the screen
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton1(Vector2.new(100,100),CFrame.new(Vector3.new(0,0,0)))
+end
+
+local RandomF = {
+    [1] = "Random",
+    [2] = 1
+}
+
+function AutoHoldSandTool(state)
+    if state then
+        -- Find the tool in the player's Backpack
+        local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Shovel") -- Ensure tool name is correct
+        if tool then
+            -- Move the tool to the character's hand (assuming the tool is a model with an appropriate handle)
+            tool.Parent = game.Players.LocalPlayer.Character
+            -- Assuming tool has an Activate function (custom tools might have it)
+            if tool:FindFirstChild("Activate") then
+                tool:Activate()
+            end
+        else
+            print("Tool not found in Backpack")
+        end
+    else
+        print("Tool holding state is false, tool not equipped")
+    end
+end
+
+Section:NewToggle("Auto Store Squid Card", "Collect Squid Card", function(state)
+    while true do
+        AutoHoldSquidCardTool(state)  -- เรียกใช้ฟังก์ชันการถือเครื่องมือ
+        autoClick()  -- คลิกอัตโนมัติ
+        wait()
+        clickScreen()  -- คลิกหน้าจอ
+    end
+end)
+
+
+-- กำหนด CFrame ที่ต้องการวาปไป
+local targetCFrame = CFrame.new(341.503479, 45.4712601, -769.741638, -0.0210446212, 1.62648117e-08, 0.999778509, -1.47327999e-08, 1, -1.65785305e-08, -0.999778509, -1.50784256e-08, -0.0210446212)  -- เปลี่ยนพิกัดที่นี่เป็นตำแหน่งที่ต้องการ
+
+Section:NewToggle("Auto Miner", "Auto Miner", function(state)
+    autoPressEEnabled = state
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = character.HumanoidRootPart
+        if autoPressEEnabled then
+            -- Set Anchored to true when toggle is enabled
+            humanoidRootPart.Anchored = true
+            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(targetCFrame)
+            AutoHoldSandTool(state)
+            task.spawn(autoPressE) -- Automatically press E if enabled
+        else
+            humanoidRootPart.Anchored = false -- Set Anchored to false when toggle is disabled
+        end
+    end
+end)
+
+Section:NewButton("Auto Random Fruit", "Random Fruit", function(state)
+    -- เรียกใช้ FireServer
+    game:GetService("ReplicatedStorage").Remote.RandomFruit:FireServer(unpack(RandomF))
+end)
+
+
+
+local Tab = Window:NewTab("Teleport")
+local Section = Tab:NewSection("Teleport")
+
+local locations = {
+    ["Starter"] = Vector3.new(18358.3438, 28.9936295, -1002.69141, -0.803013325, 0.34913063, -0.48298803, 0.249987662, 0.933018625, 0.258809656, 0.540995181, 0.087086536, -0.836504698),
+    ["Event"] = Vector3.new(-1976.21716, 15.9725695, -469.069641, 0.827816308, 5.72123149e-08, 0.560999274, -1.2027324e-08, 1, -8.4235225e-08, -0.560999274, 6.29839718e-08, 0.827816308),
+	["Boss"] = Vector3.new(-1976.21716, 15.9725695, -469.069641, 0.827816308, 5.72123149e-08, 0.560999274, -1.2027324e-08, 1, -8.4235225e-08, -0.560999274, 6.29839718e-08, 0.827816308),
+	["Femto"] = Vector3.new(2311.9292, -4.48340654, 2264.54492, -0.342042685, 0, -0.939684391, 0, 1, 0, 0.939684391, 0, -0.342042685),
+	["Okarun"] = Vector3.new(-1085.7915, 119.082008, 3694.10913, 0.000323414803, -0.157656521, -0.987493992, 8.68886709e-05, 0.987493992, -0.157656491, 1, -3.4801662e-05, 0.000333070755),
+	["Shadow Jungle"] = Vector3.new(-2356.35498, 4.16014862, 3722.41479, 0, 0, -1, 0, 1, 0, 1, 0, 0),
+	["Hoshi Village"] = Vector3.new(-3000.03247, -2.37316132, 2883.33545, -0.707134247, 0, -0.707079291, 0, 1, 0, 0.707079291, 0, -0.707134247),
+	["Factory"] = Vector3.new(-1157.56775, 22.3147049, 1694.55481, 0, 0, -1, 0, 1, 0, 1, 0, 0),
+	["Admin"] = Vector3.new(-1357.58496, -1.275383, 580.95697, 0, 0, -1, 0, 1, 0, 1, 0, 0),
+	["Town"] = Vector3.new(-2741.20972, -0.559875488, 993.151611, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+}
+
+local selectedLocation = nil
+
+Section:NewDropdown("Select Location", "Choose a place to teleport", {"Starter", "Event", "Boss", "Femto", "Okarun", "Shadow Jungle", "Hoshi Village", "Factory", "Admin", "Town"}, function(locationName)
+    selectedLocation = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
+
+    -- วาปไปยังตำแหน่งที่เลือกโดยอัตโนมัติ
+    if selectedLocation then
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation)
+            print("Teleported to:", selectedLocation)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
+        end
+    else
+        print("Please select a location first.")
+    end
+end)
+
+-- ดึงข้อมูลมอนสเตอร์จาก Workspace:Enemies
+local Workspace = game:GetService("Workspace")
+local EnemiesFolder = Workspace:FindFirstChild("npcClick")
+
+-- ตรวจสอบว่ามีโฟลเดอร์ Enemies หรือไม่
+if EnemiesFolder then
+    local MonterNames = {}
+    local MonterObjects = {}
+
+    -- ดึงชื่อมอนสเตอร์และเก็บอ้างอิงไปที่วัตถุ
+    for _, monter in pairs(EnemiesFolder:GetChildren()) do
+        table.insert(MonterNames, monter.Name)
+        MonterObjects[monter.Name] = monter
+    end
+
+    -- สร้าง Dropdown
+    local Dropdown = Section:NewDropdown("Shop", "Teleport to Shop", MonterNames, function(selected)
+        -- เมื่อเลือกมอนสเตอร์แล้วให้วาปไปยังตำแหน่งของมัน
+        local selectedMonter = MonterObjects[selected]
+        
+        if selectedMonter and selectedMonter:FindFirstChild("HumanoidRootPart") then
+            -- วาปไปที่ตำแหน่งของมอนสเตอร์
+            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(selectedMonter.HumanoidRootPart.CFrame)
+        else
+            warn("มอนสเตอร์ไม่มี HumanoidRootPart หรือไม่พบมอนสเตอร์ที่เลือก")
+        end
+    end)
+else
+    warn("ไม่พบโฟลเดอร์ Enemies ใน Workspace")
+end
+
+
+local playersDropdown = {}  -- ตัวแปรเก็บรายชื่อผู้เล่นใน Dropdown
+
+-- ฟังก์ชันสำหรับดึงรายชื่อผู้เล่น
+local function getPlayerList()
+    local players = {}
+    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+        table.insert(players, player.Name)
+    end
+    return players
+end
+
+-- สร้าง Dropdown ที่อัพเดทผู้เล่น
+local Dropdown = Section:NewDropdown("Select Player", "Choose a player to teleport to", getPlayerList(), function(selectedPlayer)
+    selectedPlayerName = selectedPlayer
+end)
+
+-- ฟังก์ชันสำหรับวาปไปยังผู้เล่นที่เลือก
+Section:NewButton("Teleport to Player", "Teleport to the selected player", function()
+    if selectedPlayerName then
+        local targetPlayer = game:GetService("Players"):FindFirstChild(selectedPlayerName)
+        if targetPlayer then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+            print("Teleporting to " .. selectedPlayerName)
+        else
+            print("Player not found")
+        end
+    else
+        print("No player selected")
+    end
+end)
+
+-- ฟังก์ชันสำหรับอัพเดท Dropdown ทุกครั้งที่มีการเปลี่ยนแปลงในผู้เล่น
+local function refreshDropdown()
+    local playerList = getPlayerList()
+    local currentPlayers = {}
+
+    -- ตรวจสอบว่า Dropdown มีผู้เล่นใหม่หรือไม่
+    for _, playerName in pairs(playerList) do
+        if not playersDropdown[playerName] then
+            playersDropdown[playerName] = true
+            Dropdown:AddOption(playerName)
+        end
+    end
+
+    -- ตรวจสอบว่า มีผู้เล่นที่ออกไปจาก Dropdown หรือไม่
+    for _, playerName in pairs(playersDropdown) do
+        if not table.find(playerList, playerName) then
+            playersDropdown[playerName] = nil
+            Dropdown:RemoveOption(playerName)
+        end
+    end
+end
+
+-- รีเฟรช Dropdown ทุก 1 วินาที
+task.spawn(function()
+    while true do
+        wait(1)  -- อัพเดททุก 1 วินาที
+        refreshDropdown()
+    end
+end)
+
+local Tab = Window:NewTab("Stats")
+local Section = Tab:NewSection("Stats")
+
+-- ประกาศตัวแปรสำหรับการควบคุม Toggle และ Loop
+local toggle = false -- เริ่มต้น toggle ปิดอยู่
+
+local Melee = {
+    [1] = "UpStats",
+    [2] = "Sword",
+    [3] = 5
+}
+
+local Sword = {
+    [1] = "UpStats",
+    [2] = "Sword",
+    [3] = 5
+}
+
+local Defense = {
+    [1] = "UpStats",
+    [2] = "Defense",
+    [3] = 5
+}
+
+local DevilFruit = {
+    [1] = "UpStats",
+    [2] = "DevilFruit",
+    [3] = 5
+}
+
+local Special = {
+    [1] = "UpStats",
+    [2] = "Special",
+    [3] = 5
+}
+
+Section:NewToggle("Auto Melee", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Melee))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+Section:NewToggle("Auto Sword", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Sword))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+Section:NewToggle("Auto Defense", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Defense))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+Section:NewToggle("Auto DevilFruit", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(DevilFruit))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+Section:NewToggle("Auto Special", "Up Stats", function(state)
+    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
+    if toggle then
+        -- ถ้า toggle เป็น true เริ่ม loop
+        while toggle do
+            -- เรียกใช้ FireServer
+            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Special))
+            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
+        end
+    end
+end)
+
+local Tab = Window:NewTab("Misc")
+local Section = Tab:NewSection("Character")
+
+Section:NewSlider("WalkSpeed", "", 500, 0, function(s) -- 500 (MaxValue) | 0 (MinValue)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
+
+Section:NewSlider("JumpPower", "", 500, 0, function(j) -- 500 (MaxValue) | 0 (MinValue)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = j
+end)
+
+local Tab = Window:NewTab("Setting")
+local Section = Tab:NewSection("Setting")
+Section:NewKeybind("on/off", "KeybindInfo", Enum.KeyCode.RightControl, function()
+  Library:ToggleUI()
+end)
