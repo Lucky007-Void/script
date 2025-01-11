@@ -41,7 +41,7 @@ Bar:GetPropertyChangedSignal("Size"):Connect(function()
     end
 end)
 
-local Tab = Window:NewTab("Character")
+local Tab = Window:NewTab("Misc")
 local Section = Tab:NewSection("Character")
 
 Section:NewSlider("WalkSpeed", "", 500, 0, function(s) -- 500 (MaxValue) | 0 (MinValue)
