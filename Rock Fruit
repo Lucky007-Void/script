@@ -306,7 +306,7 @@ local autoPressEEnabled = false -- สถานะเปิด/ปิด Auto Pr
 
 -- ฟังก์ชันกดปุ่ม Z อัตโนมัติ
 local function autoPressZ()
-    while autoPressEEnabled do
+    while autoPressZEnabled do
         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Z, false, game) -- กดปุ่ม Z
         task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Z, false, game) -- ปล่อยปุ่ม Z
