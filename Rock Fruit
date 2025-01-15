@@ -1,5 +1,5 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("LuckyXHub Moodeng Fruit", "DarkTheme")
+local Window = Library.CreateLib("LuckyX Hub : Rock Fruit", "DarkTheme")
 local Tab = Window:NewTab("Main")
 local Section = Tab:NewSection("Main")
 
@@ -190,14 +190,16 @@ local function teleportToMonster(system, targetPosition)
     end
 end
 
-function AutoHoldTool(state)
-    if state then
-        -- Find the tool in the player's Backpack
-        local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Cid") -- Ensure tool name is correct
+-- ตัวแปรสำหรับเก็บชื่อ Tool ที่เลือก
+local autoEquipEnabled = false
+local selectedTool = nil
+
+-- ฟังก์ชันสำหรับถือ Tool
+function AutoHoldTool()
+    if selectedTool then
+        local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(selectedTool)
         if tool then
-            -- Move the tool to the character's hand (assuming the tool is a model with an appropriate handle)
             tool.Parent = game.Players.LocalPlayer.Character
-            -- Assuming tool has an Activate function (custom tools might have it)
             if tool:FindFirstChild("Activate") then
                 tool:Activate()
             end
@@ -205,9 +207,10 @@ function AutoHoldTool(state)
             print("Tool not found in Backpack")
         end
     else
-        print("Tool holding state is false, tool not equipped")
+        print("No tool selected")
     end
 end
+
 
 local VirtualUser = game:GetService("VirtualUser")
 
@@ -267,13 +270,34 @@ for system, config in pairs(systems) do
     end)
 end
 
-local autoEquipEnabled = false
+-- เพิ่ม Dropdown สำหรับเลือก Tool
+local toolDropdown = Section:NewDropdown("Select Tool", "Auto Equip", {}, function(toolName)
+    selectedTool = toolName
+    print("Selected Tool:", selectedTool)
+end)
 
-Section:NewToggle("Auto Equip", "Enable/Disable auto-click at the center of the screen", function(state)
+-- ฟังก์ชันสำหรับอัปเดตรายชื่อ Tool ใน Dropdown
+function UpdateToolDropdown()
+    local tools = {}
+    for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(tools, tool.Name)
+        end
+    end
+    toolDropdown:Refresh(tools) -- อัปเดต Dropdown
+end
+
+-- เพิ่ม Toggle สำหรับเปิด/ปิด Auto Equip
+Section:NewToggle("Auto Equip", "Enable/Disable auto-equip of the selected tool", function(state)
     autoEquipEnabled = state
-    while autoEquipEnabled do
-        AutoHoldTool(state)
-        wait(1)
+    if autoEquipEnabled then
+        print("Auto Equip Enabled")
+        while autoEquipEnabled do
+            AutoHoldTool()
+            wait(1) -- ระยะเวลาที่ฟังก์ชันจะถูกเรียกซ้ำ
+        end
+    else
+        print("Auto Equip Disabled")
     end
 end)
 
@@ -294,6 +318,7 @@ task.spawn(function()
         updateMonsterList("Boss")
         updateMonsterList("Mon")
         updateMonsterList("Dungeon")
+        UpdateToolDropdown()
         task.wait(1) -- Adjusted to 1 second to avoid high CPU load
     end
 end)
