@@ -1,0 +1,112 @@
+local systems = {
+    Player = {
+        dropdown = nil,
+        selectedPlayer = nil,
+        playerList = {},
+        isAutoTeleportActive = false
+    }
+}
+
+-- Update player list
+local function updatePlayerList(system)
+    local config = systems[system]
+    if not config then return end
+
+    config.playerList = {}
+
+    for _, player in pairs(game.Players:GetPlayers()) do
+        table.insert(config.playerList, player.Name)
+    end
+
+    if config.dropdown then
+        config.dropdown:Refresh(config.playerList)
+    end
+end
+
+-- Teleport to player
+local function teleportToPlayer(system)
+    local config = systems[system]
+    if not config or not config.selectedPlayer then return end
+
+    local targetPlayer = game.Players:FindFirstChild(config.selectedPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3.4)
+            print("Teleported to:", config.selectedPlayer)
+        else
+            warn("Your character or HumanoidRootPart not found.")
+        end
+    else
+        warn("Target player or their character is unavailable.")
+    end
+end
+
+
+
+-- UI Setup for Player System
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("LuckyX Hub : Teleport to Player", "DarkTheme")
+local Tab = Window:NewTab("Main")
+local Section = Tab:NewSection("Main")
+
+for system, config in pairs(systems) do
+    -- Dropdown for selecting player
+    config.dropdown = Section:NewDropdown("Select Player", "Choose a player to teleport to", config.playerList, function(selected)
+        config.selectedPlayer = selected
+        print("Selected Player:", selected)
+    end)
+
+    -- Toggle for auto teleporting
+    Section:NewToggle("Auto Teleport", "Enable/Disable auto teleport to the selected player", function(state)
+        config.isAutoTeleportActive = state
+        if state then
+            print("Auto teleport activated")
+            
+            spawn(function()
+                while config.isAutoTeleportActive do
+                    teleportToPlayer(system)
+                    task.wait() -- Adjust delay as needed
+                end
+            end)
+        else
+            print("Auto teleport deactivated")
+        end
+    end)
+end
+
+-- Refresh the player list every second
+task.spawn(function()
+    while true do
+        updatePlayerList("Player")
+        task.wait(1)
+    end
+end)
+
+local locations = {
+    ["1"] = Vector3.new(-725.588257, -88.4999619, 0.271846741, -0.0871522129, -5.48719576e-08, -0.996195018, 8.38782199e-08, 1, -6.24196375e-08, 0.996195018, -8.8999073e-08, -0.0871522129),
+	["2"] = Vector3.new(-570.75769, 6.60000467, 12.8297367, 0.930410981, -5.05522273e-08, 0.366517931, 1.88099616e-08, 1, 9.01763073e-08, -0.366517931, -7.70068382e-08, 0.930410981)
+}
+
+local selectedLocation = nil
+
+Section:NewDropdown("Select Location", "Choose a place to teleport", {"1", "2"}, function(locationName)
+    selectedLocation = locations[locationName] -- เก็บตำแหน่งที่เลือก
+    print("Selected location:", locationName)
+
+    -- วาปไปยังตำแหน่งที่เลือกโดยอัตโนมัติ
+    if selectedLocation then
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(selectedLocation)
+            print("Teleported to:", selectedLocation)
+        else
+            print("Error: Player or HumanoidRootPart not found.")
+        end
+    else
+        print("Please select a location first.")
+    end
+end)
+
