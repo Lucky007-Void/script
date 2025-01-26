@@ -6,7 +6,7 @@ local Section = Tab:NewSection("Main")
 local locations = {
     ["1"] = Vector3.new(-725.588257, -88.4999619, 0.271846741, -0.0871522129, -5.48719576e-08, -0.996195018, 8.38782199e-08, 1, -6.24196375e-08, 0.996195018, -8.8999073e-08, -0.0871522129),
     ["2"] = Vector3.new(725.448914, -88.4999619, -0.510667801, -0.00872581732, -3.56817296e-08, 0.999961913, 1.82430693e-08, 1, 3.58422803e-08, -0.999961913, 1.85551272e-08, -0.00872581732),
-    ["S"] = Vector3.new(571.239075, 5.79999971, 88.2324753, -0.993575633, 2.22877339e-09, 0.11317002, -9.76928938e-09, 1, -1.05463457e-07, -0.11317002, -1.05891509e-07, -0.993575633)
+    ["Home"] = Vector3.new(571.239075, 5.79999971, 88.2324753, -0.993575633, 2.22877339e-09, 0.11317002, -9.76928938e-09, 1, -1.05463457e-07, -0.11317002, -1.05891509e-07, -0.993575633)
 }
 
 local selectedLocation = nil
@@ -23,7 +23,7 @@ function Loot(v)
 end
 
 -- Location dropdown for teleportation
-Section:NewDropdown("Select Location", "Choose a place to teleport", {"1", "2", "S"}, function(locationName)
+Section:NewDropdown("Select Location", "Choose a place to teleport", {"1", "2", "Home"}, function(locationName)
     selectedLocation = locations[locationName]
     print("Selected location:", locationName)
 
