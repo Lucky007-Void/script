@@ -51,7 +51,7 @@ spawn(function()
                 for _, room in pairs(workspace.Storages:GetChildren()) do
                     if room:FindFirstChild("Contents") and room.Contents:FindFirstChild("Loot") then
                         for _, g in pairs(room.Contents.Loot:GetChildren()) do
-                            if g:IsA("Model") or g:IsA("Part") then
+                            if g:IsA("Model") or g:IsA("Part") or g:IsA("MeshPart") or g:IsA("UnionOperation") then
                                 hasLoot = true
                                 repeat task.wait()
                                     if g:IsA("Model") then
@@ -97,7 +97,7 @@ spawn(function()
                 for _, Basementroom in pairs(workspace.BasementStorages:GetChildren()) do
                     if Basementroom:FindFirstChild("Contents") and Basementroom.Contents:FindFirstChild("Loot") then
                         for _, f in pairs(Basementroom.Contents.Loot:GetChildren()) do
-                            if f:IsA("Model") or f:IsA("Part") then
+                            if f:IsA("Model") or f:IsA("Part") or f:IsA("MeshPart") or f:IsA("UnionOperation") then
                                 hasLoot2 = true
                                 repeat
                                     task.wait()  -- ลดการใช้ทรัพยากร
