@@ -10,17 +10,6 @@ local locations = {
 }
 
 local selectedLocation = nil
-local AutoFarm = false
-local AutoFarm2 = false
-
--- Function to get Loot from contents
-function Loot(v)
-    for _, g in next, v.Contents.Loot:GetChildren() do
-        if g:IsA("Model") or g:IsA("Part") then
-            return g
-        end
-    end
-end
 
 -- Location dropdown for teleportation
 Section:NewDropdown("Select Location", "Choose a place to teleport", {"1", "2", "S"}, function(locationName)
@@ -43,47 +32,54 @@ Section:NewDropdown("Select Location", "Choose a place to teleport", {"1", "2", 
     end
 end)
 
--- Auto Farm toggle 1
+local hasLoot = false
+local hasLoot2 = false
+
 Section:NewToggle("Auto Farm", "Farm", function(v)
     AutoFarm = v
 end)
 
--- Auto Farm toggle 2
 Section:NewToggle("Auto Farm2", "Farm", function(v)
     AutoFarm2 = v
 end)
 
--- Auto Farm logic
 spawn(function()
     while true do task.wait()
         pcall(function()
             if AutoFarm then
-                for i, v in next, workspace.Storages:GetChildren() do
-                    if v:IsA("Model") and v.Name == "Room" and v.Door:FindFirstChild("Handle") and v.Door.Handle.ProximityPrompt.Enabled and not v:FindFirstChild("ClaimedStorage") and not v.Door:FindFirstChild("Lock") and not (v:FindFirstChild("Contents") and v.Contents:FindFirstChild("Loot") and Loot(v)) then
-                        repeat task.wait()
-                            if (v.Door.Handle.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 5 then
-                                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Door.Handle.CFrame * CFrame.new(0, 2, 0)
+                hasLoot = false
+                for _, room in pairs(workspace.Storages:GetChildren()) do
+                    if room:FindFirstChild("Contents") and room.Contents:FindFirstChild("Loot") then
+                        for _, g in pairs(room.Contents.Loot:GetChildren()) do
+                            if g:IsA("Model") or g:IsA("Part") then
+                                hasLoot = true
+                                repeat task.wait()
+                                    if g:IsA("Model") then
+                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.PrimaryPart.CFrame * CFrame.new(0, 2, 0)
+                                    else
+                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame * CFrame.new(0, 2, 0)
+                                    end
+                                    g.ProximityPrompt.HoldDuration = 0
+                                    fireproximityprompt(g.ProximityPrompt, 0)
+                                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, g.Position)
+                                until not g
                             end
-                            v.Door.Handle.ProximityPrompt.HoldDuration = 0
-                            fireproximityprompt(v.Door.Handle.ProximityPrompt, 0)
-                            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, v.Door.Handle.Position)
-                        until not v.Door.Handle.ProximityPrompt.Enabled
-                        local tick = tick()
-                        repeat task.wait() until tick() - tick > 2
-                    elseif v:IsA("Model") and v.Name == "Room" and v:FindFirstChild("Contents") and v.Contents:FindFirstChild("Loot") and Loot(v) then
-                        local g = Loot(v)
-                        if g then
-                            warn("Loot Name", g.Name)
-                            repeat task.wait(0.05)
-                                if g:IsA("Model") then
-                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.PrimaryPart.CFrame * CFrame.new(0, 2, 0)
-                                else
-                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame * CFrame.new(0, 2, 0)
+                        end
+                    end
+                end
+                if not hasLoot then
+                    for i, v in next, workspace.Storages:GetChildren() do
+                        if v:IsA("Model") and v.Name == "Room" and v.Door:FindFirstChild("Handle") and v.Door.Handle.ProximityPrompt.Enabled and not v:FindFirstChild("ClaimedStorage") and not v.Door:FindFirstChild("Lock") then
+                            repeat task.wait()
+                                if (v.Door.Handle.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 5 then
+                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Door.Handle.CFrame * CFrame.new(0, 2, 0)
                                 end
-                                g.ProximityPrompt.HoldDuration = 0
-                                fireproximityprompt(g.ProximityPrompt, 0)
-                                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, g.Position)
-                            until not g
+                                v.Door.Handle.ProximityPrompt.HoldDuration = 0
+                                fireproximityprompt(v.Door.Handle.ProximityPrompt, 0)
+                                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, v.Door.Handle.Position)
+                            until not v.Door.Handle.ProximityPrompt.Enabled
+                            local tick = tick()
+                            repeat task.wait() until tick() - tick > 2
                         end
                     end
                 end
@@ -92,41 +88,58 @@ spawn(function()
     end
 end)
 
--- Auto Farm logic for AutoFarm2
 spawn(function()
-    while true do task.wait()
+    while true do
+        task.wait()
         pcall(function()
             if AutoFarm2 then
-                for i, c in next, workspace.BasementStorages:GetChildren() do
-                    if c:IsA("Model") and c.Name == "BasementRoom" and c.Door:FindFirstChild("Handle") and c.Door.Handle.ProximityPrompt.Enabled and not c:FindFirstChild("ClaimedStorage") and not c.Door:FindFirstChild("Lock") and not (c:FindFirstChild("Contents") and c.Contents:FindFirstChild("Loot") and Loot(c)) then
-                        repeat task.wait()
-                            if (c.Door.Handle.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 5 then
-                                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = c.Door.Handle.CFrame * CFrame.new(0, 2, 0)
+                hasLoot2 = false
+                for _, Basementroom in pairs(workspace.BasementStorages:GetChildren()) do
+                    if Basementroom:FindFirstChild("Contents") and Basementroom.Contents:FindFirstChild("Loot") then
+                        for _, f in pairs(Basementroom.Contents.Loot:GetChildren()) do
+                            if f:IsA("Model") or f:IsA("Part") then
+                                hasLoot2 = true
+                                repeat
+                                    task.wait()  -- ลดการใช้ทรัพยากร
+                                    if f:IsA("Model") then
+                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = f.PrimaryPart.CFrame * CFrame.new(0, 2, 0)
+                                    else
+                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = f.CFrame * CFrame.new(0, 2, 0)
+                                    end
+                                    f.ProximityPrompt.HoldDuration = 0
+                                    fireproximityprompt(f.ProximityPrompt, 0)
+                                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, f.Position)
+                                until not f
                             end
-                            c.Door.Handle.ProximityPrompt.HoldDuration = 0
-                            fireproximityprompt(c.Door.Handle.ProximityPrompt, 0)
-                            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, c.Door.Handle.Position)
-                        until not c.Door.Handle.ProximityPrompt.Enabled
-                        local tick = tick()
-                        repeat task.wait() until tick() - tick > 2
-                    elseif c:IsA("Model") and c.Name == "BasementRoom" and c:FindFirstChild("Contents") and c.Contents:FindFirstChild("Loot") and Loot(c) then
-                        local g = Loot(c)
-                        if g then
-                            warn("Loot Name", g.Name)
-                            repeat task.wait(0.05)
-                                if g:IsA("Model") then
-                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.PrimaryPart.CFrame * CFrame.new(0, 2, 0)
-                                else
-                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame * CFrame.new(0, 2, 0)
+                        end
+                    end
+                end
+                if not hasLoot2 then
+                    for i, c in next, workspace.BasementStorages:GetChildren() do
+                        if c:IsA("Model") and c.Name == "BasementRoom" and c.Door:FindFirstChild("Handle") and c.Door.Handle.ProximityPrompt.Enabled and not c:FindFirstChild("ClaimedStorage") and not c.Door:FindFirstChild("Lock") then
+                            repeat task.wait()  -- ลดการใช้ทรัพยากร
+                                if (c.Door.Handle.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 5 then
+                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = c.Door.Handle.CFrame * CFrame.new(0, 2, 0)
                                 end
-                                g.ProximityPrompt.HoldDuration = 0
-                                fireproximityprompt(g.ProximityPrompt, 0)
-                                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, g.Position)
-                            until not g
+                                c.Door.Handle.ProximityPrompt.HoldDuration = 0
+                                fireproximityprompt(c.Door.Handle.ProximityPrompt, 0)
+                                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, c.Door.Handle.Position)
+                            until not c.Door.Handle.ProximityPrompt.Enabled
+                            local tick = tick()
+                            repeat task.wait() until tick() - tick > 2
                         end
                     end
                 end
             end
         end)
     end
-end) 
+end)
+
+
+
+
+local Tab = Window:NewTab("Setting")
+local Section = Tab:NewSection("Setting")
+Section:NewKeybind("on/off", "KeybindInfo", Enum.KeyCode.RightControl, function()
+  Library:ToggleUI()
+end)
