@@ -135,7 +135,58 @@ spawn(function()
     end
 end)
 
+local noclip = false
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local UserInputService = game:GetService("UserInputService")
 
+-- ฟังก์ชันที่ใช้ Noclip
+local function toggleNoclip(state)
+    noclip = state
+    while noclip do
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+        task.wait() -- ป้องกันจากการใช้งาน CPU สูง
+    end
+end
+
+-- ตรวจจับการกดปุ่ม C
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    -- ตรวจสอบว่าไม่ใช่การกดใน UI หรือการกดที่มีการประมวลผลแล้ว
+    if gameProcessed then return end
+
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.C then
+        if noclip then
+            toggleNoclip(false) -- ปิด Noclip
+            -- รีเซ็ต Collision กลับเป็นปกติ
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        else
+            toggleNoclip(true) -- เปิด Noclip
+        end
+    end
+end)
+
+local Bank = game.Players.LocalPlayer.PlayerGui.HUD:FindFirstChild("Bank")
+
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end  -- Ignore inputs that are processed by the game (like chatting)
+    
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.B then
+        if Bank then
+            Bank.Visible = not Bank.Visible  -- Toggle visibility
+        else
+            warn("ไม่พบ GUI ที่ชื่อ 'Bank'")
+        end
+    end
+end)
 
 
 local Tab = Window:NewTab("Setting")
