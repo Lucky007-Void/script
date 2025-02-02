@@ -211,16 +211,8 @@ end
 
 local VirtualUser = game:GetService("VirtualUser")
 
-local function autoClick()
-    while _G.autoClickEnabled do
-        local screenSize = workspace.CurrentCamera.ViewportSize -- ดึงขนาดหน้าจอของผู้เล่น
-        local centerPosition = Vector2.new(screenSize.X / 2, screenSize.Y / 2) -- คำนวณตำแหน่งกลางหน้าจอ
-
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton1(centerPosition) -- คลิกที่ตำแหน่งกลางหน้าจอ
-        task.wait(0.1) -- ปรับดีเลย์ระหว่างคลิก (ค่าแนะนำ: 0.1 วินาที)
-    end
-end
+local screenSize = workspace.CurrentCamera.ViewportSize -- ดึงขนาดหน้าจอของผู้เล่น
+local centerPosition = Vector2.new(screenSize.X / 2, screenSize.Y / 2) -- คำนวณตำแหน่งกลางหน้าจอ
 
 -- Setup Dropdowns and Toggles for both Boss and Mon systems in the same section
 for system, config in pairs(systems) do
@@ -240,23 +232,12 @@ for system, config in pairs(systems) do
             spawn(function()
                 while config.isAutoTeleportActive do
                     teleportToMonster(system)
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton1(centerPosition) -- คลิกที่ตำแหน่งกลางหน้าจอ
                     task.wait(0.01) -- Wait 1 second to avoid high CPU load
-                    
-                    -- การจัดการ Anchored
-                    local player = game.Players.LocalPlayer
-                    local character = player.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        local humanoidRootPart = character.HumanoidRootPart
-                        if toggle then
-                            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-                        end
-                    else
-                        print("Character or HumanoidRootPart not found.")
-                    end
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
                 end
             end)
-        else
-            print("Auto teleport (" .. system .. ") deactivated")
         end
     end)
 end
@@ -289,17 +270,6 @@ Section:NewToggle("Auto Equip", "Enable/Disable auto-equip of the selected tool"
         end
     else
         print("Auto Equip Disabled")
-    end
-end)
-
--- Toggle for Auto Click
-Section:NewToggle("Auto Click", "Enable/Disable auto-click at the center of the screen", function(state)
-    _G.autoClickEnabled = state
-    if state then
-        print("Auto-click activated")
-        task.spawn(autoClick) -- เริ่ม Auto Click ใน Task แยก
-    else
-        print("Auto-click deactivated")
     end
 end)
 
@@ -374,14 +344,14 @@ end
 
 local VirtualInputManager = game:GetService("VirtualInputManager") -- บริการสำหรับจัดการ Input
 
-local autoPressBEnabled = false -- สถานะเปิด/ปิด Auto Press B
+local autoPressFEnabled = false -- สถานะเปิด/ปิด Auto Press B
 
--- ฟังก์ชันกดปุ่ม B อัตโนมัติ
-local function autoPressB()
-    while autoPressBEnabled do
-        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.B, false, game) -- กดปุ่ม B
+-- ฟังก์ชันกดปุ่ม F อัตโนมัติ
+local function autoPressF()
+    while autoPressFEnabled do
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.B, false, game) -- กดปุ่ม F
         task.wait(0.1) -- เวลาค้างปุ่ม (ปรับค่าได้)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.B, false, game) -- ปล่อยปุ่ม B
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.B, false, game) -- ปล่อยปุ่ม F
         task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
     end
 end
@@ -426,13 +396,13 @@ Section:NewToggle("Auto V", "Enable/Disable auto pressing V", function(state)
     end
 end)
 
-Section:NewToggle("Auto B", "Enable/Disable auto pressing B", function(state)
-    autoPressBEnabled = state
+Section:NewToggle("Auto F", "Enable/Disable auto pressing F", function(state)
+    autoPressFEnabled = state
     if state then
-        print("Auto B Activated")
-        task.spawn(autoPressB)
+        print("Auto F Activated")
+        task.spawn(autoPressF)
     else
-        print("Auto B Deactivated")
+        print("Auto F Deactivated")
     end
 end)
 
@@ -451,61 +421,6 @@ local function autoPressE()
         task.wait(0.5) -- เวลาระหว่างการกด (ปรับค่าได้)
     end
 end
-
-local RunService = game:GetService("RunService")
-
-function AutoHoldSquidCardTool()
-    RunService.Heartbeat:Connect(function()
-        -- หาผลิตภัณฑ์ที่ชื่อ "Orb Blue" ใน Backpack
-        local tools = game.Players.LocalPlayer.Backpack:GetChildren()
-        local toolFound = nil
-        
-        for _, tool in pairs(tools) do
-            if tool.Name == "Squid Card" then
-                toolFound = tool
-                break -- หยุดค้นหาหลังจากเจอเครื่องมือแรก
-            end
-        end
-        
-        if toolFound then
-            -- ย้ายเครื่องมือไปที่มือของตัวละคร
-            if toolFound.Parent ~= game.Players.LocalPlayer.Character then
-                toolFound.Parent = game.Players.LocalPlayer.Character
-            end
-            
-            -- ถ้าเครื่องมือมีฟังก์ชัน Activate ก็จะทำการเรียกใช้งาน
-            if toolFound:FindFirstChild("Activate") then
-                toolFound:Activate()
-            end
-        else
-            print("ไม่พบเครื่องมือใน Backpack")
-        end
-    end)
-end
-
-local VirtualUser = game:GetService("VirtualUser")
-
-local function autoClick()
-    VirtualUser:ClickButton1(Vector2.new(100,100),CFrame.new(Vector3.new(0,0,0)))
-end
-
-
-local VirtualUser = game:GetService("VirtualUser")
-
-function clickScreen()
-    local player = game.Players.LocalPlayer
-    local dialogueGui = player.PlayerGui:WaitForChild("Dialogue")
-    local frame = dialogueGui:WaitForChild("Frame")
-    local button = frame:FindFirstChild("3")
-
-    -- Adjust button size and position
-    button.Size = UDim2.new(100,100,100,100)  -- ขนาดปุ่มที่กำหนด
-    button.Position = UDim2.new(0,-700,0,-700)  -- ตำแหน่งปุ่มที่กำหนด
-
-    VirtualUser:CaptureController()
-    VirtualUser:ClickButton1(Vector2.new(100,100),CFrame.new(Vector3.new(0,0,0)))
-end
-
 
 local RandomF = {
     [1] = "Random",
@@ -530,21 +445,6 @@ function AutoHoldSandTool(state)
         print("Tool holding state is false, tool not equipped")
     end
 end
-
-local AutoStore = false -- ตัวแปรควบคุม
-
-Section:NewToggle("Auto Store Squid Card", "Collect Squid Card", function(state)
-    AutoStore = state -- อัพเดตสถานะของตัวแปรควบคุม
-    if AutoStore then
-        while AutoStore do
-            AutoHoldSquidCardTool() 
-            autoClick()
-            wait() -- Add slight delay to avoid overloading
-            clickScreen()
-            wait()
-        end
-    end
-end)
 
 
 
@@ -642,164 +542,6 @@ if EnemiesFolder then
 else
     warn("ไม่พบโฟลเดอร์ Enemies ใน Workspace")
 end
-
-
-local playersDropdown = {}  -- ตัวแปรเก็บรายชื่อผู้เล่นใน Dropdown
-
--- ฟังก์ชันสำหรับดึงรายชื่อผู้เล่น
-local function getPlayerList()
-    local players = {}
-    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-        table.insert(players, player.Name)
-    end
-    return players
-end
-
--- สร้าง Dropdown ที่อัพเดทผู้เล่น
-local Dropdown = Section:NewDropdown("Select Player", "Choose a player to teleport to", getPlayerList(), function(selectedPlayer)
-    selectedPlayerName = selectedPlayer
-end)
-
--- ฟังก์ชันสำหรับวาปไปยังผู้เล่นที่เลือก
-Section:NewButton("Teleport to Player", "Teleport to the selected player", function()
-    if selectedPlayerName then
-        local targetPlayer = game:GetService("Players"):FindFirstChild(selectedPlayerName)
-        if targetPlayer then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-            print("Teleporting to " .. selectedPlayerName)
-        else
-            print("Player not found")
-        end
-    else
-        print("No player selected")
-    end
-end)
-
--- ฟังก์ชันสำหรับอัพเดท Dropdown ทุกครั้งที่มีการเปลี่ยนแปลงในผู้เล่น
-local function refreshDropdown()
-    local playerList = getPlayerList()
-    local currentPlayers = {}
-
-    -- ตรวจสอบว่า Dropdown มีผู้เล่นใหม่หรือไม่
-    for _, playerName in pairs(playerList) do
-        if not playersDropdown[playerName] then
-            playersDropdown[playerName] = true
-            Dropdown:AddOption(playerName)
-        end
-    end
-
-    -- ตรวจสอบว่า มีผู้เล่นที่ออกไปจาก Dropdown หรือไม่
-    for _, playerName in pairs(playersDropdown) do
-        if not table.find(playerList, playerName) then
-            playersDropdown[playerName] = nil
-            Dropdown:RemoveOption(playerName)
-        end
-    end
-end
-
--- รีเฟรช Dropdown ทุก 1 วินาที
-task.spawn(function()
-    while true do
-        wait(1)  -- อัพเดททุก 1 วินาที
-        refreshDropdown()
-    end
-end)
-
-local Tab = Window:NewTab("Stats")
-local Section = Tab:NewSection("Stats")
-
--- ประกาศตัวแปรสำหรับการควบคุม Toggle และ Loop
-local toggle = false -- เริ่มต้น toggle ปิดอยู่
-
-local Melee = {
-    [1] = "UpStats",
-    [2] = "Sword",
-    [3] = 5
-}
-
-local Sword = {
-    [1] = "UpStats",
-    [2] = "Sword",
-    [3] = 5
-}
-
-local Defense = {
-    [1] = "UpStats",
-    [2] = "Defense",
-    [3] = 5
-}
-
-local DevilFruit = {
-    [1] = "UpStats",
-    [2] = "DevilFruit",
-    [3] = 5
-}
-
-local Special = {
-    [1] = "UpStats",
-    [2] = "Special",
-    [3] = 5
-}
-
-Section:NewToggle("Auto Melee", "Up Stats", function(state)
-    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
-    if toggle then
-        -- ถ้า toggle เป็น true เริ่ม loop
-        while toggle do
-            -- เรียกใช้ FireServer
-            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Melee))
-            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
-        end
-    end
-end)
-
-Section:NewToggle("Auto Sword", "Up Stats", function(state)
-    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
-    if toggle then
-        -- ถ้า toggle เป็น true เริ่ม loop
-        while toggle do
-            -- เรียกใช้ FireServer
-            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Sword))
-            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
-        end
-    end
-end)
-
-Section:NewToggle("Auto Defense", "Up Stats", function(state)
-    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
-    if toggle then
-        -- ถ้า toggle เป็น true เริ่ม loop
-        while toggle do
-            -- เรียกใช้ FireServer
-            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Defense))
-            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
-        end
-    end
-end)
-
-Section:NewToggle("Auto DevilFruit", "Up Stats", function(state)
-    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
-    if toggle then
-        -- ถ้า toggle เป็น true เริ่ม loop
-        while toggle do
-            -- เรียกใช้ FireServer
-            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(DevilFruit))
-            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
-        end
-    end
-end)
-
-Section:NewToggle("Auto Special", "Up Stats", function(state)
-    toggle = state -- เปลี่ยนสถานะ toggle ตาม state (true/false)
-    if toggle then
-        -- ถ้า toggle เป็น true เริ่ม loop
-        while toggle do
-            -- เรียกใช้ FireServer
-            game:GetService("ReplicatedStorage").Remotes.System:FireServer(unpack(Special))
-            task.wait(0.1) -- รอ 0.1 วินาทีก่อน loop รอบถัดไป (ปรับเวลาตามต้องการ)
-        end
-    end
-end)
 
 local Tab = Window:NewTab("Misc")
 local Section = Tab:NewSection("Character")
