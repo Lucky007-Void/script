@@ -248,7 +248,7 @@ for system, config in pairs(systems) do
                     if character and character:FindFirstChild("HumanoidRootPart") then
                         local humanoidRootPart = character.HumanoidRootPart
                         if toggle then
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
                         end
                     else
                         print("Character or HumanoidRootPart not found.")
