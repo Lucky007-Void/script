@@ -110,9 +110,6 @@ local function teleportToMonster(system)
             -- วาปตัวละครไปที่ตำแหน่งที่กำหนด
             humanoidRootPart.CFrame = targetCFrame
 
-            -- ตั้งค่า Anchored ให้กับ HumanoidRootPart ของตัวละคร
-            humanoidRootPart.Anchored = true
-
             print("Selected monster is dead. Teleported to the target position.")
         else
             warn("Character or HumanoidRootPart not found.")
@@ -265,13 +262,7 @@ for system, config in pairs(systems) do
                     if character and character:FindFirstChild("HumanoidRootPart") then
                         local humanoidRootPart = character.HumanoidRootPart
                         if toggle then
-                            -- ตั้งค่า Anchored = true เมื่อ toggle เปิด
-                            humanoidRootPart.Anchored = true
-                            print("Anchored enabled.")
-                        else
-                            -- ตั้งค่า Anchored = false เมื่อ toggle ปิด
-                            humanoidRootPart.Anchored = false
-                            print("Anchored disabled.")
+                            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
                         end
                     else
                         print("Character or HumanoidRootPart not found.")
