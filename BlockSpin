@@ -1,0 +1,54 @@
+local function updateATMColor(ATM)
+    local highlightColor = Color3.fromRGB(0, 255, 0) -- สีเขียวเริ่มต้น (ถ้าไม่มี ScreenGui หรือ disabled)
+
+    -- เช็คเฉพาะถ้ามันเป็น ATM
+    if ATM.Name == "ATM" then
+        -- หาภายใน ATM ทุก ๆ part
+        local parts = ATM:GetDescendants()
+        local highlight = ATM:FindFirstChildOfClass("Highlight")
+
+        -- ถ้าไม่มี Highlight ให้สร้างใหม่
+        if not highlight then
+            highlight = Instance.new("Highlight")
+            highlight.Name = "ATMHighlight"
+            highlight.Parent = ATM
+        end
+
+        -- หาภายใน ATM ทุก ๆ part และเช็ค Screen
+        for _, part in ipairs(parts) do
+            if part:IsA("BasePart") then
+                -- ค้นหา Screen ภายใน part
+                local ScreenPart = part:FindFirstChild("Screen")
+                if ScreenPart and ScreenPart.Enabled ~= nil then
+                    -- ถ้า ScreenEnabled เป็น true หรือ false
+                    if ScreenPart.Enabled then
+                        highlightColor = Color3.fromRGB(255, 0, 0) -- สีแดง
+                        break -- ถ้าพบว่า Screen enabled, ไม่จำเป็นต้องเช็คต่อ
+                    else
+                        highlightColor = Color3.fromRGB(0, 255, 0) -- สีเขียว
+                    end
+                end
+            end
+        end
+
+        -- อัปเดตสีของ Highlight
+        highlight.FillColor = highlightColor
+        highlight.Enabled = true -- ทำให้ Highlight มองเห็นได้ตลอดเวลา
+    end
+end
+
+local function checkAllATMs()
+    -- วนลูปหาทุก ATM ที่อยู่ใน workspace.Map.Props
+    local allATMs = workspace.Map.Props:GetChildren()
+    for _, ATM in ipairs(allATMs) do
+        if ATM:IsA("Model") and ATM.Name == "ATM" then  -- เช็คแค่ ATM ที่มีชื่อเป็น "ATM"
+            updateATMColor(ATM)
+        end
+    end
+end
+
+-- อัปเดตสีของทุก ATM ทุก ๆ 1 วินาที
+while true do
+    checkAllATMs()
+    wait(1) -- เช็คทุก ๆ 1 วินาที
+end
