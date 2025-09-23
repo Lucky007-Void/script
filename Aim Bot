@@ -1,0 +1,70 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+local locking = false
+local target = nil
+local FOV = 100 -- pixel รอบเมาส์
+local smoothness = 0.15 -- 0.01 (ช้ามาก) - 1 (เร็วมาก)
+
+-- ฟังก์ชันหาผู้เล่นที่ "ใกล้เมาส์ที่สุด" ใน FOV (และไม่ทะลุกำแพง)
+local function getClosestPlayerInFOV()
+    local closest = nil
+    local closestDist = FOV
+
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local head = p.Character.Head
+            local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
+            if onScreen then
+                local dist = (Vector2.new(mouse.X, mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if dist <= closestDist then
+                    -- ตรวจสอบไม่ให้ทะลุกำแพง
+                    local rayParams = RaycastParams.new()
+                    rayParams.FilterDescendantsInstances = {player.Character}
+                    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+                    local direction = (head.Position - camera.CFrame.Position)
+                    local ray = workspace:Raycast(camera.CFrame.Position, direction.Unit * direction.Magnitude, rayParams)
+
+                    if not ray or ray.Instance:IsDescendantOf(p.Character) then
+                        closest = head
+                        closestDist = dist
+                    end
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+-- กด F ค้างเพื่อเปิด Lock
+uis.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.T then
+        locking = true
+    end
+end)
+
+-- ปล่อย F เพื่อปิด Lock
+uis.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.T then
+        locking = false
+        target = nil
+    end
+end)
+
+-- อัพเดตทุกเฟรม
+runService.RenderStepped:Connect(function()
+    if locking then
+        target = getClosestPlayerInFOV()
+        if target then
+            -- Smooth Aim Lock
+            local currentCFrame = camera.CFrame
+            local targetCFrame = CFrame.new(currentCFrame.Position, target.Position)
+            camera.CFrame = currentCFrame:Lerp(targetCFrame, smoothness)
+        end
+    end
+end)
