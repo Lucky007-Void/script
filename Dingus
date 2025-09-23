@@ -1,0 +1,94 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- Folder สำหรับเก็บ Highlight
+local highlightFolder = Workspace:FindFirstChild("HighlightContainer")
+if not highlightFolder then
+    highlightFolder = Instance.new("Folder")
+    highlightFolder.Name = "HighlightContainer"
+    highlightFolder.Parent = Workspace
+end
+
+-- ฟังก์ชันตรวจสอบว่า Player ควรข้าม ESP หรือไม่
+local function shouldSkipESP(character)
+    if not character then return true end
+    if character:FindFirstChild("Ghost") then
+        return true
+    end
+    local rig = character:FindFirstChild("Rig")
+    if rig and rig:FindFirstChild("Revolver") then
+        return true
+    end
+    return false
+end
+
+-- ฟังก์ชันสร้าง Highlight ให้ Player
+local function addESP(player)
+    if player.Character and not shouldSkipESP(player.Character) then
+        if not highlightFolder:FindFirstChild(player.Name .. "_ESP") then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = player.Name .. "_ESP"
+            highlight.Adornee = player.Character
+            highlight.FillColor = Color3.fromRGB(255, 0, 0) -- สีแดง
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- สีขอบขาว
+            highlight.Parent = highlightFolder
+        end
+    end
+end
+
+-- ลบ Highlight ของ Player
+local function removeESP(player)
+    local highlight = highlightFolder:FindFirstChild(player.Name .. "_ESP")
+    if highlight then
+        highlight:Destroy()
+    end
+end
+
+-- เชื่อม Event สำหรับผู้เล่นเข้ามาและ respawn
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        addESP(player)
+    end)
+end)
+
+-- เชื่อม Event สำหรับผู้เล่นออก
+Players.PlayerRemoving:Connect(removeESP)
+
+-- สร้าง ESP ให้ผู้เล่นที่อยู่แล้วตอนเริ่มเกม
+for _, player in pairs(Players:GetPlayers()) do
+    if player.Character then
+        addESP(player)
+    end
+    player.CharacterAdded:Connect(function()
+        addESP(player)
+    end)
+end
+
+-- อัปเดต Highlight ตลอดเวลาแบบเรียลไทม์
+RunService.RenderStepped:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        local highlight = highlightFolder:FindFirstChild(player.Name .. "_ESP")
+        if player.Character then
+            if shouldSkipESP(player.Character) then
+                -- ลบ Highlight ถ้ามี Ghost หรือ Revolver
+                if highlight then
+                    highlight:Destroy()
+                end
+            else
+                -- สร้างหรืออัปเดต Highlight
+                if not highlight then
+                    addESP(player)
+                else
+                    highlight.Adornee = player.Character
+                end
+            end
+        else
+            -- ถ้าไม่มี Character ให้ลบ Highlight
+            if highlight then
+                highlight:Destroy()
+            end
+        end
+    end
+end)
