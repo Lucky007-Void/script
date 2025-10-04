@@ -9,7 +9,32 @@ local target = nil
 local FOV = 100 -- pixel รอบเมาส์
 local smoothness = 0.15 -- 0.01 (ช้ามาก) - 1 (เร็วมาก)
 
--- ฟังก์ชันหาผู้เล่นที่ "ใกล้เมาส์ที่สุด" ใน FOV (และไม่ทะลุกำแพง)
+-- วงกลม FOV (ใช้ Drawing API)
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = true
+fovCircle.Thickness = 2
+fovCircle.Color = Color3.fromRGB(255, 255, 255) -- สีขาว
+fovCircle.Radius = FOV
+fovCircle.Filled = false
+fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+
+-- ฟังก์ชันตรวจสอบว่ามีผนังกั้นหรือไม่
+local function canSee(targetPosition)
+    local rayOrigin = camera.CFrame.Position
+    local rayDirection = (targetPosition - rayOrigin).Unit * (targetPosition - rayOrigin).Magnitude
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {player.Character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+    if raycastResult then
+        -- ถ้าชนสิ่งกีดขวางที่ไม่ใช่ตัวผู้เล่น
+        return raycastResult.Instance:IsDescendantOf(player.Character) == false and raycastResult.Position:FuzzyEq(targetPosition, 0.1)
+    end
+    return true
+end
+
+-- ฟังก์ชันหาผู้เล่นที่ใกล้เมาส์ที่สุดใน FOV
 local function getClosestPlayerInFOV()
     local closest = nil
     local closestDist = FOV
@@ -20,19 +45,9 @@ local function getClosestPlayerInFOV()
             local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
             if onScreen then
                 local dist = (Vector2.new(mouse.X, mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
-                if dist <= closestDist then
-                    -- ตรวจสอบไม่ให้ทะลุกำแพง
-                    local rayParams = RaycastParams.new()
-                    rayParams.FilterDescendantsInstances = {player.Character}
-                    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-
-                    local direction = (head.Position - camera.CFrame.Position)
-                    local ray = workspace:Raycast(camera.CFrame.Position, direction.Unit * direction.Magnitude, rayParams)
-
-                    if not ray or ray.Instance:IsDescendantOf(p.Character) then
-                        closest = head
-                        closestDist = dist
-                    end
+                if dist < closestDist and canSee(head.Position) then
+                    closest = head
+                    closestDist = dist
                 end
             end
         end
@@ -41,14 +56,14 @@ local function getClosestPlayerInFOV()
     return closest
 end
 
--- กด F ค้างเพื่อเปิด Lock
-uis.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.T then
+-- เริ่มล็อคเมื่อกดปุ่ม T
+uis.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.T then
         locking = true
     end
 end)
 
--- ปล่อย F เพื่อปิด Lock
+-- ปล่อยล็อคเมื่อปล่อยปุ่ม T
 uis.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.T then
         locking = false
@@ -58,10 +73,12 @@ end)
 
 -- อัพเดตทุกเฟรม
 runService.RenderStepped:Connect(function()
+    fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    fovCircle.Radius = FOV
+
     if locking then
         target = getClosestPlayerInFOV()
         if target then
-            -- Smooth Aim Lock
             local currentCFrame = camera.CFrame
             local targetCFrame = CFrame.new(currentCFrame.Position, target.Position)
             camera.CFrame = currentCFrame:Lerp(targetCFrame, smoothness)
