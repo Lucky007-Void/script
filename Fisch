@@ -3,8 +3,8 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 
 -- สร้างหน้าต่างหลัก
 local Window = Fluent:CreateWindow({
-    Title = "LuckyX Hub : Fisch",
-    SubTitle = "by Lucky_y3k",
+    Title = "Fisch",
+    SubTitle = "LuckyX Hub",
     TabWidth = 160,
     Size = UDim2.fromOffset(500, 350),
     Acrylic = false,
