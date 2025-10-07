@@ -18,6 +18,10 @@ local Char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Char:WaitForChild("Humanoid")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Cast = {
+	100,
+	1
+}
 
 -- ฟังก์ชันใส่อุปกรณ์
 local function equipitem(v)
@@ -43,7 +47,7 @@ TabMain:AddToggle("AutoCast", {
                 task.wait(0.2)
                 local Rod = Char:FindFirstChildOfClass("Tool")
                 if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("cast") then
-                    Rod.events.cast:FireServer(100, 1)
+                    Rod:WaitForChild("events"):WaitForChild("castAsync"):InvokeServer(unpack(Cast))
                 end
             end
         end)
