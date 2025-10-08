@@ -18,12 +18,10 @@ local Char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Char:WaitForChild("Humanoid")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Cast = {
-	100,
-	1
-}
+local GuiService = game:GetService("GuiService")
+local randomcast = math.random(90, 100) -- สุ่มแรงขว้าง
+local Cast = { randomcast, 1 }
 
--- ฟังก์ชันใส่อุปกรณ์
 local function equipitem(v)
     if LocalPlayer.Backpack:FindFirstChild(v) then
         local a = LocalPlayer.Backpack:FindFirstChild(v)
@@ -61,20 +59,57 @@ TabMain:AddToggle("AutoShake", {
     Callback = function(v)
         _G.AutoShake = v
         pcall(function()
-            while _G.AutoShake do
-                task.wait()
-                local PlayerGUI = LocalPlayer:WaitForChild("PlayerGui")
-                local shakeUI = PlayerGUI:FindFirstChild("shakeui")
-                if shakeUI and shakeUI.Enabled then
-                    local safezone = shakeUI:FindFirstChild("safezone")
-                    local button = safezone and safezone:FindFirstChild("button")
+            local function startShakeUI(shakeUI)
+                if not shakeUI then return end
+                local function tryClick(button)
                     if button and button.Visible then
-                        local pos = button.AbsolutePosition + button.AbsoluteSize / 2
-                        VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 0)
-                        VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 0)
+                        GuiService.SelectedObject = button
+                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
                     end
                 end
+                local function monitorSafezone()
+                    local safezone = shakeUI:FindFirstChild("safezone")
+                    if safezone then
+                        local button = safezone:FindFirstChild("button")
+                        tryClick(button)
+                        safezone.ChildAdded:Connect(function(child)
+                            if _G.AutoShake and child.Name == "button" then
+                                tryClick(child)
+                                child:GetPropertyChangedSignal("Visible"):Connect(function()
+                                    if _G.AutoShake and child.Visible then
+                                        tryClick(child)
+                                    end
+                                end)
+                            end
+                        end)
+                        if button then
+                            button:GetPropertyChangedSignal("Visible"):Connect(function()
+                                if _G.AutoShake and button.Visible then
+                                    tryClick(button)
+                                end
+                            end)
+                        end
+                    end
+                end
+                shakeUI:GetPropertyChangedSignal("Enabled"):Connect(function()
+                    if _G.AutoShake and shakeUI.Enabled then
+                        monitorSafezone()
+                    end
+                end)
+                if shakeUI.Enabled then
+                    monitorSafezone()
+                end
             end
+            local PlayerGUI = LocalPlayer:WaitForChild("PlayerGui")
+            if PlayerGUI:FindFirstChild("shakeui") then
+                startShakeUI(PlayerGUI.shakeui)
+            end
+            PlayerGUI.ChildAdded:Connect(function(child)
+                if _G.AutoShake and child.Name == "shakeui" then
+                    startShakeUI(child)
+                end
+            end)
         end)
     end
 })
@@ -101,7 +136,42 @@ TabMain:AddToggle("AutoReel", {
     end
 })
 
--- Auto Equip Rod
+
+TabMain:AddToggle("Anchored", {
+    Title = "Anchored",
+    Default = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local RunService = game:GetService("RunService")
+
+        if state then
+            local initialCFrame = nil
+
+            -- รอให้ Character พร้อม
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                initialCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+            else
+                LocalPlayer.CharacterAdded:Wait()
+                LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+                initialCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+            end
+
+            -- สร้างการล็อกตำแหน่งและมุม
+            _G.TPLockConnection = RunService.RenderStepped:Connect(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = initialCFrame
+                end
+            end)
+        else
+            if _G.TPLockConnection then
+                _G.TPLockConnection:Disconnect()
+                _G.TPLockConnection = nil
+            end
+        end
+    end
+})
+
 task.spawn(function()
     while task.wait() do
         if _G.AutoCast then
@@ -146,11 +216,14 @@ local locations = {
     ["Merchant"] = Vector3.new(464.740417, 150.62973, 229.492584),
     ["Gole Fisch"] = Vector3.new(-2675.18604, 170.5, 1742.26538),
     ["The Depths"] = Vector3.new(940.204407, -738.083374, 1457.24158),
-    ["Ice"] = Vector3.new(19877.373, 577.082947, 5643.15869),
+    ["The Depths2"] = Vector3.new(1382.587646484375, -604.9406127929688, 2341.161376953125),
+    ["In"] = Vector3.new(6069.5380859375, 194.9801483154297, 307.2333679199219),
+    ["Craft"] = Vector3.new(-3156.822021484375, -747.2178955078125, 1697.4261474609375),
     ["Sundial"] = Vector3.new(-1148, 134.499985, -1075),
     ["Windset"] = Vector3.new(2849, 178.333237, 2702),
     ["Smokescreen"] = Vector3.new(2789, 139.825485, -625),
     ["Tempest"] = Vector3.new(35, 132.500015, 1943),
+    ["QCrate"] = Vector3.new(-217.9184112548828, 135.0543975830078, 1893.77880859375),
     ["Enchant"] = Vector3.new(1309.3783, -805.221191, -98.6691666),
     ["Relic"] = Vector3.new(-957.766052, 222.000015, -987.641968)
 }
@@ -164,7 +237,7 @@ end
 
 TabTP:AddDropdown("Teleport NPC", {
     Title = "Select NPC",
-    Values = {"Merchant"},
+    Values = {"Merchant", "The Depths"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
@@ -173,7 +246,7 @@ TabTP:AddDropdown("Teleport NPC", {
 
 TabTP:AddDropdown("Teleport Zone", {
     Title = "Select Zone",
-    Values = {"Gole Fisch", "The Depths", "Ice"},
+    Values = {"Gole Fisch", "The Depths", "The Depths2", "In"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
@@ -189,9 +262,9 @@ TabTP:AddDropdown("Teleport Totem", {
     end
 })
 
-TabTP:AddDropdown("Teleport Enchant", {
-    Title = "Select Enchant",
-    Values = {"Enchant", "Relic"},
+TabTP:AddDropdown("Teleport Shop", {
+    Title = "Select Shop",
+    Values = {"Enchant", "Relic", "Craft", "QCrate"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
