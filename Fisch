@@ -259,7 +259,7 @@ TabTP:AddDropdown("Teleport Zone", {
 
 TabTP:AddDropdown("Teleport Zone Boss", {
     Title = "Select Zone Boss",
-    Values = {"Mossjew", "Kraken"},
+    Values = {"Mossjew", "Kraken", "Scylla"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
