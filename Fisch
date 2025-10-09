@@ -214,10 +214,14 @@ local TabTP = Window:AddTab({ Title = "Teleport", Icon = "rbxassetid://603519084
 
 local locations = {
     ["Merchant"] = Vector3.new(464.740417, 150.62973, 229.492584),
+    ["Appraiser"] = Vector3.new(447.3258361816406, 150.54901123046875, 207.81690979003906),
     ["Gole Fisch"] = Vector3.new(-2675.18604, 170.5, 1742.26538),
     ["The Depths"] = Vector3.new(940.204407, -738.083374, 1457.24158),
     ["The Depths2"] = Vector3.new(1382.587646484375, -604.9406127929688, 2341.161376953125),
-    ["In"] = Vector3.new(6069.5380859375, 194.9801483154297, 307.2333679199219),
+    ["Ancient Isle"] = Vector3.new(6069.5380859375, 194.9801483154297, 307.2333679199219),
+    ["Mossjew"] = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875),
+    ["Kraken"] = Vector3.new(-4377.296875, -996.2604370117188, 2064.634033203125),
+    ["Scylla"] = Vector3.new(-2339.830322265625, -11182.8818359375, 7074.814453125),
     ["Craft"] = Vector3.new(-3156.822021484375, -747.2178955078125, 1697.4261474609375),
     ["Sundial"] = Vector3.new(-1148, 134.499985, -1075),
     ["Windset"] = Vector3.new(2849, 178.333237, 2702),
@@ -237,7 +241,7 @@ end
 
 TabTP:AddDropdown("Teleport NPC", {
     Title = "Select NPC",
-    Values = {"Merchant", "The Depths"},
+    Values = {"Merchant", "Appraiser"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
@@ -246,7 +250,16 @@ TabTP:AddDropdown("Teleport NPC", {
 
 TabTP:AddDropdown("Teleport Zone", {
     Title = "Select Zone",
-    Values = {"Gole Fisch", "The Depths", "The Depths2", "In"},
+    Values = {"Gole Fisch", "The Depths", "The Depths2", "Ancient Isle"},
+    Multi = false,
+    Callback = function(v)
+        teleport(locations[v])
+    end
+})
+
+TabTP:AddDropdown("Teleport Zone Boss", {
+    Title = "Select Zone Boss",
+    Values = {"Mossjew", "Kraken"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
