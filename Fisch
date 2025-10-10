@@ -282,24 +282,60 @@ local function StartAutoMossjaw()
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
 				WaitForCharacter()
-                task.wait(2)
+				task.wait(2)
 				ClickRightCenter()
 				task.wait(2)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
-                task.wait(2)
-                Fluent:SetToggle("AutoCast", true)
-                Fluent:SetToggle("AutoShake", true)
-                Fluent:SetToggle("AutoReel", true)
+				task.wait(2)
+				_G.AutoCast = true
+				_G.AutoShake = true
+				_G.AutoReel = true
+				task.spawn(function()
+					while _G.AutoCast and Settings.AutoMossjaw do
+						task.wait(0.2)
+						local Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+						if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
+							Rod.events.castAsync:InvokeServer(math.random(90,100), 1)
+						end
+					end
+				end)
+				task.spawn(function()
+					while _G.AutoReel and Settings.AutoMossjaw do
+						task.wait()
+						for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+							if gui:IsA("ScreenGui") and gui.Name == "reel" then
+								if gui:FindFirstChild("bar") then
+									task.wait(0.15)
+									ReplicatedStorage.events.reelfinished:FireServer(100, true)
+								end
+							end
+						end
+					end
+				end)
+				task.spawn(function()
+					while _G.AutoShake and Settings.AutoMossjaw do
+						task.wait(0.1)
+						local shake = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
+						if shake and shake:FindFirstChild("safezone") then
+							local btn = shake.safezone:FindFirstChild("button")
+							if btn and btn.Visible then
+								GuiService.SelectedObject = btn
+								VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+								VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+							end
+						end
+					end
+				end)
 				repeat task.wait(1) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
 				if Settings.AutoMossjaw then
 					TeleportToRandomServer()
-					task.wait(1)
+					task.wait(2)
 				end
 			else
 				TeleportToRandomServer()
-				task.wait(1)
+				task.wait(2)
 			end
 		end
 	end)
