@@ -191,6 +191,139 @@ end)
 ------------------------------------------------------------
 local TabAuto = Window:AddTab({ Title = "Auto", Icon = "rbxassetid://6035190846" })
 
+local SettingsFile = "FischSettings.json"
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local placeId = game.PlaceId
+
+-- โหลดข้อมูลที่บันทึกไว้
+local Settings = {}
+if isfile and isfile(SettingsFile) then
+    local success, data = pcall(function()
+        return HttpService:JSONDecode(readfile(SettingsFile))
+    end)
+    if success and data then
+        Settings = data
+    end
+end
+
+-- ฟังก์ชันบันทึกตั้งค่า
+local function SaveSettings()
+    if writefile then
+        writefile(SettingsFile, HttpService:JSONEncode(Settings))
+    end
+end
+
+-- ฟังก์ชันเปิด toggle ต่าง ๆ
+local function EnableFeature(name, value)
+    Settings[name] = value
+    SaveSettings()
+    if name == "AutoCast" then
+        _G.AutoCast = value
+    elseif name == "AutoShake" then
+        _G.AutoShake = value
+    elseif name == "AutoReel" then
+        _G.AutoReel = value
+    elseif name == "Anchored" then
+        if value then
+            local initialCFrame = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character.HumanoidRootPart.CFrame
+            _G.TPLockConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = initialCFrame
+                end
+            end)
+        else
+            if _G.TPLockConnection then
+                _G.TPLockConnection:Disconnect()
+                _G.TPLockConnection = nil
+            end
+        end
+    end
+end
+
+-- ฟังก์ชันสุ่มเซิร์ฟใหม่
+local function FindRandomServer()
+	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+	local success, result = pcall(function() return game:HttpGet(url) end)
+	if success then
+		local data = HttpService:JSONDecode(result)
+		local servers = {}
+		for _, server in ipairs(data.data) do
+			if server.playing < server.maxPlayers and server.id ~= game.JobId then
+				table.insert(servers, server.id)
+			end
+		end
+		if #servers > 0 then
+			return servers[math.random(1, #servers)]
+		end
+	end
+	return nil
+end
+
+local function TeleportToRandomServer()
+	local jobId = FindRandomServer()
+	if jobId then
+		TeleportService:TeleportToPlaceInstance(placeId, jobId, LocalPlayer)
+	end
+end
+
+-- จุดวาป Mossjaw
+local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
+
+-- ฟังก์ชันหลักสำหรับ AutoMossjaw
+local function StartAutoMossjaw()
+	task.spawn(function()
+		while Settings.AutoMossjaw do
+			task.wait(5)
+			local moss = workspace:FindFirstChild("Mossjaw")
+			if moss then
+				-- เจอ Mossjaw
+				print("✅ พบ Mossjaw!")
+				EnableFeature("AutoCast", true)
+				EnableFeature("AutoShake", true)
+				EnableFeature("AutoReel", true)
+				EnableFeature("Anchored", true)
+				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
+				end
+				repeat task.wait(5) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
+				print("❌ Mossjaw หายไป! กำลังหาเซิร์ฟใหม่...")
+				if Settings.AutoMossjaw then
+					TeleportToRandomServer()
+				end
+			else
+				print("❌ ไม่พบ Mossjaw ในเซิร์ฟนี้ กำลังหาเซิร์ฟใหม่...")
+				TeleportToRandomServer()
+			end
+		end
+	end)
+end
+
+TabAuto:AddToggle("AutoMossjaw", {
+    Title = "Auto Find Mossjaw",
+    Default = Settings.AutoMossjaw or false,
+    Callback = function(v)
+        Settings.AutoMossjaw = v
+        SaveSettings()
+        if v then
+            StartAutoMossjaw()
+        end
+    end
+})
+
+-- โหลดค่าที่บันทึกไว้
+for k, v in pairs(Settings) do
+    if v == true then
+        EnableFeature(k, true)
+    end
+end
+if Settings.AutoMossjaw then
+    StartAutoMossjaw()
+end
+
+
 TabAuto:AddButton({
     Title = "Sell All Fish",
     Description = "ขายปลาทั้งหมด",
@@ -334,16 +467,3 @@ TabTP:AddButton({
     end
 })
 
-------------------------------------------------------------
--- ⚙️ Tab : Settings
-------------------------------------------------------------
-local TabSetting = Window:AddTab({ Title = "Setting", Icon = "rbxassetid://6034509993" })
-
-TabSetting:AddKeybind({
-    Title = "Toggle UI",
-    Mode = "Toggle",
-    Default = Enum.KeyCode.RightControl,
-    Callback = function()
-        Fluent:ToggleUI()
-    end
-})
