@@ -252,6 +252,25 @@ local function WaitForCharacter()
 	end
 end
 
+local function ClickAtPosition(x, y)
+    VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)  -- กดคลิก
+    task.wait(0.05)
+    VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1) -- ปล่อยคลิก
+end
+
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Camera = workspace.CurrentCamera
+
+local function ClickRightCenter()
+	local viewport = Camera.ViewportSize
+	local x = viewport.X - 10  -- ห่างจากขอบขวา 10 พิกเซล
+	local y = viewport.Y / 2   -- กึ่งกลางแนวตั้ง
+
+	VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
+	task.wait(0.05)
+	VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
+end
+
 -- จุดวาป Mossjaw
 local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
 
@@ -264,12 +283,7 @@ local function StartAutoMossjaw()
 			if moss then
 				WaitForCharacter()
                 task.wait(1)
-				local cam = workspace.CurrentCamera
-				local screenSize = cam.ViewportSize
-				local clickPosition = Vector2.new(screenSize.X * 0.9, screenSize.Y * 0.5)
-				VirtualInputManager:SendMouseButtonEvent(clickPosition.X, clickPosition.Y, Enum.UserInputType.MouseButton1, true, game, 0)
-                task.wait(0.5)
-				VirtualInputManager:SendMouseButtonEvent(clickPosition.X, clickPosition.Y, Enum.UserInputType.MouseButton1, false, game, 0)
+				ClickRightCenter()
 				task.wait(3)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
