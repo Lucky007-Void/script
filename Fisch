@@ -327,7 +327,7 @@ local function StartAutoMossjaw()
 
 				task.spawn(function()
 					while _G.AutoReel and Settings.AutoMossjaw do
-						task.wait(0.3)
+						task.wait(2)
 						if IsElderMossjaw() then
 							ReplicatedStorage.events.reelfinished:FireServer(100, true)
 						else
