@@ -253,7 +253,7 @@ local function WaitForCharacter()
 end
 
 local screenSize = workspace.CurrentCamera.ViewportSize
-local centerPosition = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+local rightCornerPosition = Vector2.new(screenSize.X - 1, screenSize.Y / 2)
 
 -- จุดวาป Mossjaw
 local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
@@ -266,8 +266,8 @@ local function StartAutoMossjaw()
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
 				WaitForCharacter()
-				VirtualInputManager:SendMouseButtonEvent(centerPosition.X, centerPosition.Y, Enum.UserInputType.MouseButton1, true, game, 0)
-                VirtualInputManager:SendMouseButtonEvent(centerPosition.X, centerPosition.Y, Enum.UserInputType.MouseButton1, false, game, 0)
+				VirtualInputManager:SendMouseButtonEvent(rightCornerPosition.X, rightCornerPosition.Y, Enum.UserInputType.MouseButton1, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(rightCornerPosition.X, rightCornerPosition.Y, Enum.UserInputType.MouseButton1, false, game, 0)
 				task.wait(3)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
