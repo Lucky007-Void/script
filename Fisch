@@ -252,7 +252,7 @@ local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.315429
 local function StartAutoMossjaw()
 	task.spawn(function()
 		while Settings.AutoMossjaw do
-			task.wait(5)
+			task.wait(10)
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
 				_G.AutoCast = true
