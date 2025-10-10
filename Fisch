@@ -274,46 +274,42 @@ end
 -- จุดวาป Mossjaw
 local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
 
--- ฟังก์ชันหลักสำหรับ AutoMossjaw
+local function IsElderMossjaw()
+	local Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+	return Rod and Rod:FindFirstChild("bobber") and Rod.bobber:FindFirstChild("Elder Mossjaw") ~= nil
+end
+
 local function StartAutoMossjaw()
 	task.spawn(function()
 		while Settings.AutoMossjaw do
-			task.wait(1)
+			task.wait(0.5)
 			local moss = workspace:FindFirstChild("Mossjaw")
+
 			if moss then
 				WaitForCharacter()
-				task.wait(2)
+				task.wait(1)
 				ClickRightCenter()
-				task.wait(2)
+				task.wait(1)
+
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
-				task.wait(2)
+
+				task.wait(1)
 				_G.AutoCast = true
 				_G.AutoShake = true
 				_G.AutoReel = true
+
 				task.spawn(function()
 					while _G.AutoCast and Settings.AutoMossjaw do
-						task.wait(0.2)
+						task.wait(0.3)
 						local Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
 						if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
 							Rod.events.castAsync:InvokeServer(math.random(90,100), 1)
 						end
 					end
 				end)
-				task.spawn(function()
-					while _G.AutoReel and Settings.AutoMossjaw do
-						task.wait()
-						for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
-							if gui:IsA("ScreenGui") and gui.Name == "reel" then
-								if gui:FindFirstChild("bar") then
-									task.wait(0.15)
-									ReplicatedStorage.events.reelfinished:FireServer(100, true)
-								end
-							end
-						end
-					end
-				end)
+
 				task.spawn(function()
 					while _G.AutoShake and Settings.AutoMossjaw do
 						task.wait(0.1)
@@ -328,14 +324,32 @@ local function StartAutoMossjaw()
 						end
 					end
 				end)
-				repeat task.wait(1) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
+
+				task.spawn(function()
+					while _G.AutoReel and Settings.AutoMossjaw do
+						task.wait(0.3)
+						if IsElderMossjaw() then
+							ReplicatedStorage.events.reelfinished:FireServer(100, true)
+						else
+							ClickRightCenter()
+						end
+					end
+				end)
+
+				-- รอจน Mossjaw หาย หรือปิด AutoMossjaw
+				repeat
+					task.wait(0.5)
+				until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
+
 				if Settings.AutoMossjaw then
-					TeleportToRandomServer()
+					WaitForCharacter()
 					task.wait(1)
+					TeleportToRandomServer()
 				end
 			else
-				TeleportToRandomServer()
+				WaitForCharacter()
 				task.wait(1)
+				TeleportToRandomServer()
 			end
 		end
 	end)
