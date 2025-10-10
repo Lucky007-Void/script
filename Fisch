@@ -295,10 +295,9 @@ local function StartAutoMossjaw()
 				repeat task.wait(1) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
 				if Settings.AutoMossjaw then
 					TeleportToRandomServer()
-					task.wait(1) -- delay เพื่อให้เข้าที่หลังย้ายเซิร์ฟ
+					task.wait(1)
 				end
 			else
-				-- ถ้าไม่เจอ Mossjaw → ย้ายเซิร์ฟ
 				TeleportToRandomServer()
 				task.wait(1)
 			end
