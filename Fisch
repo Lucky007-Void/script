@@ -282,7 +282,7 @@ local function StartAutoMossjaw()
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
 				WaitForCharacter()
-                task.wait(1)
+                task.wait(3)
 				ClickRightCenter()
 				task.wait(3)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
