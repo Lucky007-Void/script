@@ -252,6 +252,18 @@ local function WaitForCharacter()
 	end
 end
 
+local function clickCenter()
+    local camera = workspace.CurrentCamera
+    local viewportSize = camera.ViewportSize
+    local centerX = viewportSize.X / 2
+    local centerY = viewportSize.Y / 2
+
+    VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, true, game, 1)  -- กดลง
+    task.wait(0.05)  -- delay ก่อนปล่อย
+    VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, false, game, 1) -- ปล่อย
+end
+
+
 -- จุดวาป Mossjaw
 local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
 
@@ -259,22 +271,24 @@ local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.315429
 local function StartAutoMossjaw()
 	task.spawn(function()
 		while Settings.AutoMossjaw do
-			task.wait(5)
+			task.wait(1)
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
-                WaitForCharacter()
-				_G.AutoCast = true
-				_G.AutoShake = true
-				_G.AutoReel = true
+				WaitForCharacter()
+				clickCenter()
+				task.wait(3)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
-				repeat task.wait(5) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
+				repeat task.wait(1) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
 				if Settings.AutoMossjaw then
 					TeleportToRandomServer()
+					task.wait(1) -- delay เพื่อให้เข้าที่หลังย้ายเซิร์ฟ
 				end
 			else
+				-- ถ้าไม่เจอ Mossjaw → ย้ายเซิร์ฟ
 				TeleportToRandomServer()
+				task.wait(1)
 			end
 		end
 	end)
@@ -296,7 +310,6 @@ TabAuto:AddToggle("AutoMossjaw", {
 if Settings.AutoMossjaw then
 	StartAutoMossjaw()
 end
-
 
 TabAuto:AddButton({
     Title = "Sell All Fish",
@@ -440,4 +453,3 @@ TabTP:AddButton({
         teleportToRandomServer()
     end
 })
-
