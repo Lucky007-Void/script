@@ -279,8 +279,6 @@ local function StartAutoMossjaw()
 			task.wait(5)
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
-				-- เจอ Mossjaw
-				print("✅ พบ Mossjaw!")
 				EnableFeature("AutoCast", true)
 				EnableFeature("AutoShake", true)
 				EnableFeature("AutoReel", true)
@@ -289,12 +287,10 @@ local function StartAutoMossjaw()
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
 				repeat task.wait(5) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
-				print("❌ Mossjaw หายไป! กำลังหาเซิร์ฟใหม่...")
 				if Settings.AutoMossjaw then
 					TeleportToRandomServer()
 				end
 			else
-				print("❌ ไม่พบ Mossjaw ในเซิร์ฟนี้ กำลังหาเซิร์ฟใหม่...")
 				TeleportToRandomServer()
 			end
 		end
@@ -466,3 +462,4 @@ TabTP:AddButton({
         teleportToRandomServer()
     end
 })
+
