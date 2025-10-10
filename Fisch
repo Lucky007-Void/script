@@ -266,7 +266,7 @@ local function StartAutoMossjaw()
                 task.wait(1)
 				local cam = workspace.CurrentCamera
 				local screenSize = cam.ViewportSize
-				local clickPosition = Vector2.new(screenSize.X * 0.75, screenSize.Y * 0.8)
+				local clickPosition = Vector2.new(screenSize.X * 0.9, screenSize.Y * 0.5)
 				VirtualInputManager:SendMouseButtonEvent(clickPosition.X, clickPosition.Y, Enum.UserInputType.MouseButton1, true, game, 0)
 				VirtualInputManager:SendMouseButtonEvent(clickPosition.X, clickPosition.Y, Enum.UserInputType.MouseButton1, false, game, 0)
 				task.wait(3)
