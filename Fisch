@@ -232,6 +232,13 @@ local locations = {
     ["Relic"] = Vector3.new(-957.766052, 222.000015, -987.641968)
 }
 
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local placeId = game.PlaceId
+local currentJobId = game.JobId
+
 local function teleport(location)
     local player = LocalPlayer
     if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -281,6 +288,49 @@ TabTP:AddDropdown("Teleport Shop", {
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
+    end
+})
+
+-- ฟังก์ชันสุ่มเซิร์ฟเวอร์
+local function findRandomServer()
+	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+
+	local success, result = pcall(function()
+		return game:HttpGet(url)
+	end)
+
+	if success then
+		local data = HttpService:JSONDecode(result)
+		local servers = {}
+
+		for _, server in ipairs(data.data) do
+			if server.id ~= currentJobId then
+				table.insert(servers, server.id)
+			end
+		end
+
+		if #servers > 0 then
+			return servers[math.random(1, #servers)] -- เลือกเซิร์ฟแบบสุ่ม
+		end
+	end
+	return nil
+end
+
+-- ฟังก์ชันย้ายไปเซิร์ฟเวอร์สุ่ม
+local function teleportToRandomServer()
+	local jobId = findRandomServer()
+	if jobId then
+		TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+	else
+		warn("ไม่พบเซิร์ฟเวอร์สุ่ม")
+	end
+end
+
+TabTP:AddButton({
+    Title = "TPRandomServer",
+    Description = "TPRandomServer",
+    Callback = function()
+        teleportToRandomServer()
     end
 })
 
