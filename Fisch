@@ -263,6 +263,7 @@ local function StartAutoMossjaw()
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
 				WaitForCharacter()
+                task.wait(1)
 				local cam = workspace.CurrentCamera
 				local screenSize = cam.ViewportSize
 				local clickPosition = Vector2.new(screenSize.X * 0.75, screenSize.Y * 0.8)
