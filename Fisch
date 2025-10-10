@@ -19,8 +19,6 @@ local Humanoid = Char:WaitForChild("Humanoid")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
-local randomcast = math.random(90, 100) -- สุ่มแรงขว้าง
-local Cast = { randomcast, 1 }
 
 local function equipitem(v)
     if LocalPlayer.Backpack:FindFirstChild(v) then
@@ -44,8 +42,11 @@ TabMain:AddToggle("AutoCast", {
             while _G.AutoCast do
                 task.wait(0.2)
                 local Rod = Char:FindFirstChildOfClass("Tool")
-                if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("cast") then
-                    Rod:WaitForChild("events"):WaitForChild("castAsync"):InvokeServer(unpack(Cast))
+                if not Rod then
+                        Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Elder Mossripper")
+                end
+                    if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
+                            Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
                 end
             end
         end)
@@ -300,7 +301,7 @@ local function StartAutoMossjaw()
 							Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Elder Mossripper")
 						end
 						if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
-							Rod.events.castAsync:InvokeServer(math.random(90,100), 1)
+							Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
 						end
 					end
 				end)
