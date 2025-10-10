@@ -216,7 +216,7 @@ local function SaveSettings()
     end
 end
 
--- ฟังก์ชันเปิด toggle ต่าง ๆ
+-- ฟังก์ชันเปิด toggle ต่าง ๆ (ไม่มี Anchored)
 local function EnableFeature(name, value)
     Settings[name] = value
     SaveSettings()
@@ -226,20 +226,6 @@ local function EnableFeature(name, value)
         _G.AutoShake = value
     elseif name == "AutoReel" then
         _G.AutoReel = value
-    elseif name == "Anchored" then
-        if value then
-            local initialCFrame = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character.HumanoidRootPart.CFrame
-            _G.TPLockConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = initialCFrame
-                end
-            end)
-        else
-            if _G.TPLockConnection then
-                _G.TPLockConnection:Disconnect()
-                _G.TPLockConnection = nil
-            end
-        end
     end
 end
 
@@ -282,7 +268,6 @@ local function StartAutoMossjaw()
 				EnableFeature("AutoCast", true)
 				EnableFeature("AutoShake", true)
 				EnableFeature("AutoReel", true)
-				EnableFeature("Anchored", true)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
@@ -462,4 +447,3 @@ TabTP:AddButton({
         teleportToRandomServer()
     end
 })
-
