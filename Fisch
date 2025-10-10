@@ -387,6 +387,7 @@ local locations = {
     ["Gole Fisch"] = Vector3.new(-2675.18604, 170.5, 1742.26538),
     ["The Depths"] = Vector3.new(940.204407, -738.083374, 1457.24158),
     ["The Depths2"] = Vector3.new(1382.587646484375, -604.9406127929688, 2341.161376953125),
+    ["Castaway"] = Vector3.new(619.7119140625, 162.12498474121094, -1832.619873046875),
     ["Ancient Isle"] = Vector3.new(6069.5380859375, 194.9801483154297, 307.2333679199219),
     ["Mossjew"] = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875),
     ["Kraken"] = Vector3.new(-4377.296875, -996.2604370117188, 2064.634033203125),
@@ -427,7 +428,7 @@ TabTP:AddDropdown("Teleport NPC", {
 
 TabTP:AddDropdown("Teleport Zone", {
     Title = "Select Zone",
-    Values = {"Gole Fisch", "The Depths", "The Depths2", "Ancient Isle"},
+    Values = {"Ancient Isle", "The Depths", "The Depths2", "Castaway"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
