@@ -268,8 +268,9 @@ local function StartAutoMossjaw()
 				local screenSize = cam.ViewportSize
 				local clickPosition = Vector2.new(screenSize.X * 0.9, screenSize.Y * 0.5)
 				VirtualInputManager:SendMouseButtonEvent(clickPosition.X, clickPosition.Y, Enum.UserInputType.MouseButton1, true, game, 0)
+                task.wait(0.5)
 				VirtualInputManager:SendMouseButtonEvent(clickPosition.X, clickPosition.Y, Enum.UserInputType.MouseButton1, false, game, 0)
-				task.wait(5)
+				task.wait(3)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
