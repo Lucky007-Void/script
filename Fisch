@@ -42,11 +42,8 @@ TabMain:AddToggle("AutoCast", {
             while _G.AutoCast do
                 task.wait(0.2)
                 local Rod = Char:FindFirstChildOfClass("Tool")
-                if not Rod then
-                        Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Elder Mossripper")
-                end
-                    if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
-                            Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
+                if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
+                   Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
                 end
             end
         end)
@@ -178,7 +175,7 @@ task.spawn(function()
         if _G.AutoCast then
             pcall(function()
                 for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
-                    if v:IsA("Tool") and v.Name:lower():find("rod") then
+                    if v:IsA("Tool") and (v.Name:lower():find("rod") or v.Name == "Elder Mossripper") then
                         equipitem(v.Name)
                     end
                 end
@@ -296,10 +293,7 @@ local function StartAutoMossjaw()
 				task.spawn(function()
 					while _G.AutoCast and Settings.AutoMossjaw do
 						task.wait(0.2)
-						local Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-						if not Rod then
-							Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Elder Mossripper")
-						end
+						local Rod = Char:FindFirstChildOfClass("Tool")
 						if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
 							Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
 						end
