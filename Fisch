@@ -355,6 +355,7 @@ local locations = {
     ["Windset"] = Vector3.new(2849, 178.333237, 2702),
     ["Smokescreen"] = Vector3.new(2789, 139.825485, -625),
     ["Tempest"] = Vector3.new(35, 132.500015, 1943),
+    ["Aurora"] = Vector3.new(-1809.96142578125, -136.87164306640625, -3282.722900390625),
     ["QCrate"] = Vector3.new(-217.9184112548828, 135.0543975830078, 1893.77880859375),
     ["Enchant"] = Vector3.new(1309.3783, -805.221191, -98.6691666),
     ["Relic"] = Vector3.new(-957.766052, 222.000015, -987.641968)
@@ -403,7 +404,7 @@ TabTP:AddDropdown("Teleport Zone Boss", {
 
 TabTP:AddDropdown("Teleport Totem", {
     Title = "Select Totem",
-    Values = {"Sundial", "Windset", "Smokescreen", "Tempest"},
+    Values = {"Sundial", "Windset", "Smokescreen", "Tempest", "Aurora"},
     Multi = false,
     Callback = function(v)
         teleport(locations[v])
