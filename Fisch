@@ -4,7 +4,7 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 -- สร้างหน้าต่างหลัก
 local Window = Fluent:CreateWindow({
     Title = "Fisch",
-    SubTitle = "LuckyX Hub",
+    SubTitle = "LuckyZ Hub",
     TabWidth = 160,
     Size = UDim2.fromOffset(500, 350),
     Acrylic = false,
@@ -191,42 +191,32 @@ end)
 ------------------------------------------------------------
 local TabAuto = Window:AddTab({ Title = "Auto", Icon = "rbxassetid://6035190846" })
 
-local SettingsFile = "FischSettings.json"
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local placeId = game.PlaceId
 
--- โหลดข้อมูลที่บันทึกไว้
+local SettingsFile = "LuckyZHubFisch.json"
 local Settings = {}
+
+-- โหลดค่าที่บันทึกไว้ (ถ้ามี)
 if isfile and isfile(SettingsFile) then
-    local success, data = pcall(function()
-        return HttpService:JSONDecode(readfile(SettingsFile))
-    end)
-    if success and data then
-        Settings = data
-    end
+	local success, data = pcall(function()
+		return HttpService:JSONDecode(readfile(SettingsFile))
+	end)
+	if success and data then
+		Settings = data
+	end
 end
 
--- ฟังก์ชันบันทึกตั้งค่า
+-- ฟังก์ชันบันทึกค่า (เฉพาะ AutoMossjaw)
 local function SaveSettings()
-    if writefile then
-        writefile(SettingsFile, HttpService:JSONEncode(Settings))
-    end
-end
-
--- ฟังก์ชันเปิด toggle ต่าง ๆ (ไม่มี Anchored)
-local function EnableFeature(name, value)
-    Settings[name] = value
-    SaveSettings()
-    if name == "AutoCast" then
-        _G.AutoCast = value
-    elseif name == "AutoShake" then
-        _G.AutoShake = value
-    elseif name == "AutoReel" then
-        _G.AutoReel = value
-    end
+	if writefile then
+		writefile(SettingsFile, HttpService:JSONEncode({
+			AutoMossjaw = Settings.AutoMossjaw
+		}))
+	end
 end
 
 -- ฟังก์ชันสุ่มเซิร์ฟใหม่
@@ -265,9 +255,9 @@ local function StartAutoMossjaw()
 			task.wait(5)
 			local moss = workspace:FindFirstChild("Mossjaw")
 			if moss then
-				EnableFeature("AutoCast", true)
-				EnableFeature("AutoShake", true)
-				EnableFeature("AutoReel", true)
+				_G.AutoCast = true
+				_G.AutoShake = true
+				_G.AutoReel = true
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
@@ -283,25 +273,20 @@ local function StartAutoMossjaw()
 end
 
 TabAuto:AddToggle("AutoMossjaw", {
-    Title = "Auto Find Mossjaw",
-    Default = Settings.AutoMossjaw or false,
-    Callback = function(v)
-        Settings.AutoMossjaw = v
-        SaveSettings()
-        if v then
-            StartAutoMossjaw()
-        end
-    end
+	Title = "Auto Mossjaw",
+	Default = Settings.AutoMossjaw or false,
+	Callback = function(v)
+		Settings.AutoMossjaw = v
+		SaveSettings()
+		if v then
+			StartAutoMossjaw()
+		end
+	end
 })
 
--- โหลดค่าที่บันทึกไว้
-for k, v in pairs(Settings) do
-    if v == true then
-        EnableFeature(k, true)
-    end
-end
+-- โหลดค่าเมื่อเปิดสคริปต์
 if Settings.AutoMossjaw then
-    StartAutoMossjaw()
+	StartAutoMossjaw()
 end
 
 
@@ -447,3 +432,4 @@ TabTP:AddButton({
         teleportToRandomServer()
     end
 })
+
