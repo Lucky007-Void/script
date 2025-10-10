@@ -289,9 +289,9 @@ local function StartAutoMossjaw()
 					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
 				end
                 task.wait(2)
-                _G.AutoCast = true
-                _G.AutoShake = true
-                _G.AutoReel = true
+                Fluent:SetToggle("AutoCast", true)
+                Fluent:SetToggle("AutoShake", true)
+                Fluent:SetToggle("AutoReel", true)
 				repeat task.wait(1) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
 				if Settings.AutoMossjaw then
 					TeleportToRandomServer()
