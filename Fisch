@@ -292,7 +292,7 @@ local function StartAutoElderMossjaw()
 
 				task.spawn(function()
 					while _G.AutoCast and Settings.AutoElderMossjaw do
-						task.wait(0.2)
+						task.wait()
 						local Rod = Char:FindFirstChildOfClass("Tool")
 						if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
 							Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
@@ -302,7 +302,7 @@ local function StartAutoElderMossjaw()
 
 				task.spawn(function()
 					while _G.AutoShake and Settings.AutoElderMossjaw do
-						task.wait(0.1)
+						task.wait()
 						local shake = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
 						if shake and shake:FindFirstChild("safezone") then
 							local btn = shake.safezone:FindFirstChild("button")
@@ -317,7 +317,7 @@ local function StartAutoElderMossjaw()
 
 				task.spawn(function()
 					while _G.AutoReel and Settings.AutoElderMossjaw do
-						task.wait(0.3)
+						task.wait()
 						for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
 							if gui:IsA("ScreenGui") and gui.Name == "reel" then
 								if gui:FindFirstChild("bar") then
