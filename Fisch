@@ -208,11 +208,11 @@ if isfile and isfile(SettingsFile) then
 	end
 end
 
--- ฟังก์ชันบันทึกค่า (เฉพาะ AutoMossjaw)
+-- ฟังก์ชันบันทึกค่า (เฉพาะ AutoElderMossjaw)
 local function SaveSettings()
 	if writefile then
 		writefile(SettingsFile, HttpService:JSONEncode({
-			AutoMossjaw = Settings.AutoMossjaw
+			AutoElderMossjaw = Settings.AutoElderMossjaw
 		}))
 	end
 end
@@ -270,20 +270,20 @@ local function ClickRightCenter()
 end
 
 -- จุดวาป Mossjaw
-local MossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
+local ElderMossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
 
-local function StartAutoMossjaw()
+local function StartAutoElderMossjaw()
 	task.spawn(function()
-		while Settings.AutoMossjaw do
+		while Settings.AutoElderMossjaw do
 			task.wait(1)
-			local moss = workspace:FindFirstChild("Mossjaw")
+			local moss = workspace:FindFirstChild("Elder Mossjaw")
 			if moss then
 				WaitForCharacter()
 				task.wait(2)
 				ClickRightCenter()
 				task.wait(2)
 				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(MossjawPos)
+					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(ElderMossjawPos)
 				end
 				task.wait(2)
 				_G.AutoCast = true
@@ -291,7 +291,7 @@ local function StartAutoMossjaw()
 				_G.AutoReel = true
 
 				task.spawn(function()
-					while _G.AutoCast and Settings.AutoMossjaw do
+					while _G.AutoCast and Settings.AutoElderMossjaw do
 						task.wait(0.2)
 						local Rod = Char:FindFirstChildOfClass("Tool")
 						if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
@@ -301,7 +301,7 @@ local function StartAutoMossjaw()
 				end)
 
 				task.spawn(function()
-					while _G.AutoShake and Settings.AutoMossjaw do
+					while _G.AutoShake and Settings.AutoElderMossjaw do
 						task.wait(0.1)
 						local shake = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
 						if shake and shake:FindFirstChild("safezone") then
@@ -316,7 +316,7 @@ local function StartAutoMossjaw()
 				end)
 
 				task.spawn(function()
-					while _G.AutoReel and Settings.AutoMossjaw do
+					while _G.AutoReel and Settings.AutoElderMossjaw do
 						task.wait(0.3)
 						for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
 							if gui:IsA("ScreenGui") and gui.Name == "reel" then
@@ -329,8 +329,8 @@ local function StartAutoMossjaw()
 					end
 				end)
 
-				repeat task.wait(1) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoMossjaw
-				if Settings.AutoMossjaw then
+				repeat task.wait(1) until not workspace:FindFirstChild("Mossjaw") or not Settings.AutoElderMossjaw
+				if Settings.AutoElderMossjaw then
 					TeleportToRandomServer()
 					task.wait(2)
 				end
@@ -343,21 +343,21 @@ local function StartAutoMossjaw()
 end
 
 
-TabAuto:AddToggle("AutoMossjaw", {
-	Title = "Auto Mossjaw",
-	Default = Settings.AutoMossjaw or false,
+TabAuto:AddToggle("AutoElderMossjaw", {
+	Title = "Auto Elder Mossjaw",
+	Default = Settings.AutoElderMossjaw or false,
 	Callback = function(v)
-		Settings.AutoMossjaw = v
+		Settings.AutoElderMossjaw = v
 		SaveSettings()
 		if v then
-			StartAutoMossjaw()
+			StartAutoElderMossjaw()
 		end
 	end
 })
 
 -- โหลดค่าเมื่อเปิดสคริปต์
-if Settings.AutoMossjaw then
-	StartAutoMossjaw()
+if Settings.AutoElderMossjaw then
+	StartAutoElderMossjaw()
 end
 
 TabAuto:AddButton({
