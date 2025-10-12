@@ -175,7 +175,7 @@ task.spawn(function()
         if _G.AutoCast then
             pcall(function()
                 for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
-                    if v:IsA("Tool") and (v.Name:lower():find("rod") or v.Name == "Elder Mossripper") then
+                    if v:IsA("Tool") and (v.Name:lower():find("rod") or v.Name == "Elder Mossripper" or v.Name == "Onirifalx") then
                         equipitem(v.Name)
                     end
                 end
