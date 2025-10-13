@@ -360,6 +360,58 @@ if Settings.AutoElderMossjaw then
 	StartAutoElderMossjaw()
 end
 
+_G.AutoAppraise = false
+local heldToolName = nil
+
+_G.AutoAppraise = false
+local heldToolName = nil
+
+TabAuto:AddToggle("AutoAppraise", {
+    Title = "Auto Appraise",
+    Default = false,
+    Callback = function(v)
+        _G.AutoAppraise = v
+        if v then
+            task.spawn(function()
+                local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                if not tool then
+                    _G.AutoAppraise = false
+                    return
+                end
+
+                heldToolName = tool.Name
+
+                while _G.AutoAppraise do
+                    task.wait(0.2)
+
+                    local holdingTool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                    if not holdingTool or holdingTool.Name ~= heldToolName then
+                        pcall(function()
+                            local backpackTool = LocalPlayer.Backpack:FindFirstChild(heldToolName)
+                            if backpackTool and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                                LocalPlayer.Character.Humanoid:EquipTool(backpackTool)
+                            end
+                        end)
+                        task.wait(0.3)
+                        continue
+                    end
+
+                    if holdingTool and holdingTool:FindFirstChild("shroudedtemplate") then
+                        _G.AutoAppraise = false
+                        return
+                    end
+
+                    local args = {6, 1}
+                    pcall(function()
+                        ReplicatedStorage:WaitForChild("packages"):WaitForChild("Net"):WaitForChild("RF/DialogInteract"):InvokeServer(unpack(args))
+                    end)
+                end
+            end)
+        end
+    end
+})
+
+
 TabAuto:AddButton({
     Title = "Sell All Fish",
     Description = "ขายปลาทั้งหมด",
