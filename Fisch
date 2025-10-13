@@ -43,7 +43,7 @@ TabMain:AddToggle("AutoCast", {
                 task.wait(0.2)
                 local Rod = Char:FindFirstChildOfClass("Tool")
                 if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
-                   Rod.events.castAsync:InvokeServer(100, 1)
+                   Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
                 end
             end
         end)
@@ -322,7 +322,7 @@ local function StartAutoElderMossjaw()
 							if gui:IsA("ScreenGui") and gui.Name == "reel" then
 								if gui:FindFirstChild("bar") then
 									task.wait(0.15)
-									ReplicatedStorage.events.reelfinished:FireServer(100, true)
+									ReplicatedStorage.events.reelfinished:FireServer(math.random(95,100), true)
 								end
 							end
 						end
