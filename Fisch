@@ -322,7 +322,7 @@ local function StartAutoElderMossjaw()
 							if gui:IsA("ScreenGui") and gui.Name == "reel" then
 								if gui:FindFirstChild("bar") then
 									task.wait(0.15)
-									ReplicatedStorage.events.reelfinished:FireServer(math.random(95,100), true)
+									ReplicatedStorage.events.reelfinished:FireServer(100, true)
 								end
 							end
 						end
