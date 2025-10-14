@@ -379,7 +379,7 @@ TabAuto:AddToggle("AutoAppraise", {
                 heldToolName = tool.Name
 
                 while _G.AutoAppraise do
-                    task.wait(0.2)
+                    task.wait(0.05)
 
                     local holdingTool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
                     if not holdingTool or holdingTool.Name ~= heldToolName then
@@ -389,7 +389,7 @@ TabAuto:AddToggle("AutoAppraise", {
                                 LocalPlayer.Character.Humanoid:EquipTool(backpackTool)
                             end
                         end)
-                        task.wait(0.3)
+                        task.wait(0.1)
                         continue
                     end
 
