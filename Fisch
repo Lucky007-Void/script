@@ -356,7 +356,7 @@ end
 _G.AutoAppraise = false
 local heldToolName = nil
 
-TabMain:AddToggle("AutoAppraise", {
+TabAuto:AddToggle("AutoAppraise", {
     Title = "Auto Appraise",
     Default = false,
     Callback = function(v)
