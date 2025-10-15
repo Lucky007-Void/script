@@ -356,7 +356,7 @@ end
 _G.AutoAppraise = false
 local heldToolName = nil
 
-TabAuto:AddToggle("AutoAppraise", {
+TabMain:AddToggle("AutoAppraise", {
     Title = "Auto Appraise",
     Default = false,
     Callback = function(v)
@@ -375,8 +375,6 @@ TabAuto:AddToggle("AutoAppraise", {
                     task.wait(0.05)
 
                     local holdingTool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-
-                    -- ถ้าไม่มี Tool หรือชื่อไม่ตรงกับตอนแรก ให้ลองใส่กลับ
                     if not holdingTool or holdingTool.Name ~= heldToolName then
                         local backpackTool = LocalPlayer.Backpack:FindFirstChild(heldToolName)
                         if backpackTool and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -390,13 +388,29 @@ TabAuto:AddToggle("AutoAppraise", {
                         continue
                     end
 
-                    -- ถ้ามี shroudedtemplate แสดงว่า appraise แล้ว → หยุด
                     if holdingTool:FindFirstChild("shroudedtemplate") then
-                        _G.AutoAppraise = false
-                        return
+                        local foundNew = false
+
+                        for _, t in pairs(LocalPlayer.Backpack:GetChildren()) do
+                            if t:IsA("Tool") and t.Name == heldToolName and t ~= holdingTool then
+                                if not t:FindFirstChild("shroudedtemplate") then
+                                    pcall(function()
+                                        LocalPlayer.Character.Humanoid:EquipTool(t)
+                                    end)
+                                    foundNew = true
+                                    break
+                                end
+                            end
+                        end
+
+                        if not foundNew then
+                            _G.AutoAppraise = false
+                            return
+                        end
+
+                        continue
                     end
 
-                    -- ไม่มี shroudedtemplate → ทำการ Appraise
                     local args = {6, 1}
                     pcall(function()
                         ReplicatedStorage:WaitForChild("packages"):WaitForChild("Net"):WaitForChild("RF/DialogInteract"):InvokeServer(unpack(args))
