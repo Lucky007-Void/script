@@ -375,31 +375,28 @@ TabAuto:AddToggle("AutoAppraise", {
                     task.wait(0.05)
 
                     local holdingTool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                    if not holdingTool or holdingTool.Name ~= heldToolName then
-                        pcall(function()
-                            local backpackTool = LocalPlayer.Backpack:FindFirstChild(heldToolName)
-                            if backpackTool and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                                LocalPlayer.Character.Humanoid:EquipTool(backpackTool)
-                            end
-                        end)
-                        task.wait(0.1)
-                        continue
-                    end
 
-                    if holdingTool and holdingTool:FindFirstChild("shroudedtemplate") then
+                    -- ถ้าไม่มี Tool หรือชื่อไม่ตรงกับตอนแรก ให้ลองใส่กลับ
+                    if not holdingTool or holdingTool.Name ~= heldToolName then
                         local backpackTool = LocalPlayer.Backpack:FindFirstChild(heldToolName)
-                        if backpackTool then
+                        if backpackTool and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
                             pcall(function()
                                 LocalPlayer.Character.Humanoid:EquipTool(backpackTool)
                             end)
-                            task.wait(0.1)
-                            continue
                         else
                             _G.AutoAppraise = false
                             return
                         end
+                        continue
                     end
 
+                    -- ถ้ามี shroudedtemplate แสดงว่า appraise แล้ว → หยุด
+                    if holdingTool:FindFirstChild("shroudedtemplate") then
+                        _G.AutoAppraise = false
+                        return
+                    end
+
+                    -- ไม่มี shroudedtemplate → ทำการ Appraise
                     local args = {6, 1}
                     pcall(function()
                         ReplicatedStorage:WaitForChild("packages"):WaitForChild("Net"):WaitForChild("RF/DialogInteract"):InvokeServer(unpack(args))
@@ -409,7 +406,6 @@ TabAuto:AddToggle("AutoAppraise", {
         end
     end
 })
-
 
 TabAuto:AddButton({
     Title = "Sell All Fish",
