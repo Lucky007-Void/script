@@ -401,7 +401,7 @@ TabAuto:AddToggle("AutoAppraise", {
                     end
 
                     pcall(function()
-                        ReplicatedStorage.packages.Net.RF.DialogInteract:InvokeServer(6, 1)
+                        ReplicatedStorage:WaitForChild("packages"):WaitForChild("Net"):WaitForChild("RF/DialogInteract"):InvokeServer(unpack(args))
                     end)
                 end
             end)
