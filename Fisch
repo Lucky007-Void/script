@@ -387,13 +387,21 @@ TabAuto:AddToggle("AutoAppraise", {
                     end
 
                     if holdingTool and holdingTool:FindFirstChild("shroudedtemplate") then
-                        _G.AutoAppraise = false
-                        return
+                        local backpackTool = LocalPlayer.Backpack:FindFirstChild(heldToolName)
+                        if backpackTool then
+                            pcall(function()
+                                LocalPlayer.Character.Humanoid:EquipTool(backpackTool)
+                            end)
+                            task.wait(0.1)
+                            continue
+                        else
+                            _G.AutoAppraise = false
+                            return
+                        end
                     end
 
-                    local args = {6, 1}
                     pcall(function()
-                        ReplicatedStorage:WaitForChild("packages"):WaitForChild("Net"):WaitForChild("RF/DialogInteract"):InvokeServer(unpack(args))
+                        ReplicatedStorage.packages.Net.RF.DialogInteract:InvokeServer(6, 1)
                     end)
                 end
             end)
