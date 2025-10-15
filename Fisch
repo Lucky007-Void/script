@@ -208,15 +208,13 @@ if isfile and isfile(SettingsFile) then
 	end
 end
 
--- ฟังก์ชันบันทึกค่า
+-- ฟังก์ชันบันทึกค่า (เฉพาะ AutoElderMossjaw)
 local function SaveSettings()
-    if writefile then
-        local dataToSave = {
-            AutoElderMossjaw = Settings.AutoElderMossjaw or false,
-            AutoWhaleShark = Settings.AutoWhaleShark or false
-        }
-        writefile(SettingsFile, HttpService:JSONEncode(dataToSave))
-    end
+	if writefile then
+		writefile(SettingsFile, HttpService:JSONEncode({
+			AutoElderMossjaw = Settings.AutoElderMossjaw
+		}))
+	end
 end
 
 -- ฟังก์ชันสุ่มเซิร์ฟใหม่
@@ -252,6 +250,9 @@ local function WaitForCharacter()
 	end
 end
 
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Camera = workspace.CurrentCamera
+
 local function ClickRightCenter()
 	local viewport = Camera.ViewportSize
 	local x = viewport.X - 10  -- ห่างจากขอบขวา 10 พิกเซล
@@ -261,121 +262,6 @@ local function ClickRightCenter()
 	task.wait(0.05)
 	VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
 end
-
-
--- หาว่ามี Whale Shark มั้ย
-local function FindWhaleShark()
-    local zones = workspace:FindFirstChild("zones")
-    if not zones then return nil end
-
-    local fishing = zones:FindFirstChild("fishing")
-    if not fishing then return nil end
-
-    for _, zone in pairs(fishing:GetChildren()) do
-        for _, obj in pairs(zone:GetDescendants()) do
-            if obj:IsA("Part") and obj.Name == "Whale Shark" then
-                return obj
-            end
-        end
-    end
-    return nil
-end
-
--- เริ่มระบบ Auto Whale Shark
-local function StartAutoWhaleShark()
-	task.spawn(function()
-		while Settings.AutoWhaleShark do
-			local shark = FindWhaleShark()
-			if shark then
-				WaitForCharacter()
-                task.wait(2)
-                ClickRightCenter()
-                task.wait(2)
-				local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if hrp then
-					-- วาร์ปไปที่ Whale Shark ก่อน
-					hrp.CFrame = shark.CFrame + Vector3.new(0, 20, 0)
-				end
-
-				-- task spawn วาร์ป Whale Shark ตลอดเวลา
-				task.spawn(function()
-					while Settings.AutoWhaleShark do
-						task.wait()
-						local sharkLoop = FindWhaleShark()
-						if sharkLoop and hrp then
-							hrp.CFrame = sharkLoop.CFrame + Vector3.new(0, 20, 0)
-						end
-					end
-				end)
-
-				-- เริ่ม AutoCast / AutoShake / AutoReel
-				_G.AutoCast, _G.AutoShake, _G.AutoReel = true, true, true
-
-				-- AutoCast
-				task.spawn(function()
-					while _G.AutoCast and Settings.AutoWhaleShark do
-						task.wait()
-						local Rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-						if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
-							Rod.events.castAsync:InvokeServer(math.random(95, 100), 1)
-						end
-					end
-				end)
-
-				-- AutoShake
-				task.spawn(function()
-					while _G.AutoShake and Settings.AutoWhaleShark do
-						task.wait()
-						local gui = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
-						if gui and gui:FindFirstChild("safezone") then
-							local btn = gui.safezone:FindFirstChild("button")
-							if btn and btn.Visible then
-								VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-								VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-							end
-						end
-					end
-				end)
-
-				-- AutoReel
-				task.spawn(function()
-					while _G.AutoReel and Settings.AutoWhaleShark do
-						task.wait()
-						for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
-							if gui:IsA("ScreenGui") and gui.Name == "reel" and gui:FindFirstChild("bar") then
-								task.wait(0.15)
-								ReplicatedStorage.events.reelfinished:FireServer(100, true)
-							end
-						end
-					end
-				end)
-
-				-- รอจน Whale Shark หายไป
-				repeat task.wait(1) until not FindWhaleShark() or not Settings.AutoWhaleShark
-
-				if Settings.AutoWhaleShark then
-					task.wait(2)
-					TeleportToRandomServer()
-				end
-			else
-				task.wait(2)
-				TeleportToRandomServer()
-			end
-		end
-	end)
-end
-
-TabAuto:AddToggle("AutoWhaleShark", {
-	Title = "Auto Whale Shark",
-	Default = Settings.AutoWhaleShark or false,
-	Callback = function(v)
-		Settings.AutoWhaleShark = v
-		SaveSettings()
-		if v then
-			StartAutoWhaleShark()
-		end
-	end
-})
 
 -- จุดวาป Mossjaw
 local ElderMossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
@@ -440,11 +326,10 @@ local function StartAutoElderMossjaw()
 				repeat task.wait(2) until not workspace:FindFirstChild("Elder Mossjaw") or not Settings.AutoElderMossjaw
 				if Settings.AutoElderMossjaw then
 					TeleportToRandomServer()
-					task.wait(2)
 				end
 			else
+                task.wait(2)
 				TeleportToRandomServer()
-				task.wait(2)
 			end
 		end
 	end)
@@ -463,10 +348,7 @@ TabAuto:AddToggle("AutoElderMossjaw", {
 	end
 })
 
-if Settings.AutoWhaleShark then
-    StartAutoWhaleShark()
-end
-
+-- โหลดค่าเมื่อเปิดสคริปต์
 if Settings.AutoElderMossjaw then
 	StartAutoElderMossjaw()
 end
