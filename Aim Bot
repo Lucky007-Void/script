@@ -1,19 +1,18 @@
 local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
 local uis = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
 
 local locking = false
 local target = nil
-local FOV = 100 -- pixel รอบเมาส์
-local smoothness = 0.15 -- 0.01 (ช้ามาก) - 1 (เร็วมาก)
+local FOV = 100 -- ระยะรัศมี FOV (pixel)
+local smoothness = 0.5 -- 0.01 (ช้า) - 1 (เร็ว)
 
--- วงกลม FOV (ใช้ Drawing API)
+--// วงกลม FOV (ใช้ Drawing API)
 local fovCircle = Drawing.new("Circle")
 fovCircle.Visible = true
 fovCircle.Thickness = 2
-fovCircle.Color = Color3.fromRGB(255, 255, 255) -- สีขาว
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
 fovCircle.Radius = FOV
 fovCircle.Filled = false
 fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
@@ -28,23 +27,25 @@ local function canSee(targetPosition)
 
     local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
     if raycastResult then
-        -- ถ้าชนสิ่งกีดขวางที่ไม่ใช่ตัวผู้เล่น
-        return raycastResult.Instance:IsDescendantOf(player.Character) == false and raycastResult.Position:FuzzyEq(targetPosition, 0.1)
+        return raycastResult.Instance:IsDescendantOf(player.Character) == false 
+            and raycastResult.Position:FuzzyEq(targetPosition, 0.1)
     end
     return true
 end
 
--- ฟังก์ชันหาผู้เล่นที่ใกล้เมาส์ที่สุดใน FOV
+-- ฟังก์ชันหาผู้เล่นที่ใกล้กลางหน้าจอที่สุดใน FOV
 local function getClosestPlayerInFOV()
     local closest = nil
     local closestDist = FOV
+
+    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
 
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
             local head = p.Character.Head
             local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
             if onScreen then
-                local dist = (Vector2.new(mouse.X, mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                local dist = (center - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
                 if dist < closestDist and canSee(head.Position) then
                     closest = head
                     closestDist = dist
@@ -73,6 +74,7 @@ end)
 
 -- อัพเดตทุกเฟรม
 runService.RenderStepped:Connect(function()
+    -- อัพเดตตำแหน่งและรัศมี FOV
     fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
     fovCircle.Radius = FOV
 
