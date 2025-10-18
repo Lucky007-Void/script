@@ -243,9 +243,8 @@ local Camera = workspace.CurrentCamera
 
 local function ClickRightCenter()
 	local viewport = Camera.ViewportSize
-	local x = viewport.X - 10  -- ห่างจากขอบขวา 10 พิกเซล
-	local y = viewport.Y / 2   -- กึ่งกลางแนวตั้ง
-
+	local x = viewport.X - 10
+	local y = viewport.Y / 2
 	VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
 	task.wait(0.05)
 	VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
@@ -523,7 +522,7 @@ local function findRandomServer()
 		end
 
 		if #servers > 0 then
-			return servers[math.random(1, #servers)] -- เลือกเซิร์ฟแบบสุ่ม
+			return servers[math.random(1, #servers)]
 		end
 	end
 	return nil
