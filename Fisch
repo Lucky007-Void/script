@@ -1,7 +1,5 @@
--- โหลด Fluent UI Library
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
--- สร้างหน้าต่างหลัก
 local Window = Fluent:CreateWindow({
     Title = "Fisch",
     SubTitle = "LuckyZ Hub",
@@ -11,7 +9,6 @@ local Window = Fluent:CreateWindow({
     Theme = "Dark"
 })
 
--- ตัวแปรหลัก
 local Player = game:GetService("Players")
 local LocalPlayer = Player.LocalPlayer
 local Char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -27,9 +24,6 @@ local function equipitem(v)
     end
 end
 
-------------------------------------------------------------
--- 📂 Tab : Main
-------------------------------------------------------------
 local TabMain = Window:AddTab({ Title = "Main", Icon = "rbxassetid://4483345998" })
 
 -- AutoCast
@@ -184,9 +178,6 @@ task.spawn(function()
     end
 end)
 
-------------------------------------------------------------
--- 📂 Tab : Auto
-------------------------------------------------------------
 local TabAuto = Window:AddTab({ Title = "Auto", Icon = "rbxassetid://6035190846" })
 
 local HttpService = game:GetService("HttpService")
@@ -198,7 +189,6 @@ local placeId = game.PlaceId
 local SettingsFile = "LuckyZHubFisch.json"
 local Settings = {}
 
--- โหลดค่าที่บันทึกไว้ (ถ้ามี)
 if isfile and isfile(SettingsFile) then
 	local success, data = pcall(function()
 		return HttpService:JSONDecode(readfile(SettingsFile))
@@ -208,7 +198,6 @@ if isfile and isfile(SettingsFile) then
 	end
 end
 
--- ฟังก์ชันบันทึกค่า (เฉพาะ AutoElderMossjaw)
 local function SaveSettings()
 	if writefile then
 		writefile(SettingsFile, HttpService:JSONEncode({
@@ -217,7 +206,6 @@ local function SaveSettings()
 	end
 end
 
--- ฟังก์ชันสุ่มเซิร์ฟใหม่
 local function FindRandomServer()
 	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
 	local success, result = pcall(function() return game:HttpGet(url) end)
@@ -263,7 +251,6 @@ local function ClickRightCenter()
 	VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
 end
 
--- จุดวาป Mossjaw
 local ElderMossjawPos = Vector3.new(-4863.9990234375, -1793.8779296875, -10125.3154296875)
 
 local function StartAutoElderMossjaw()
@@ -348,7 +335,6 @@ TabAuto:AddToggle("AutoElderMossjaw", {
 	end
 })
 
--- โหลดค่าเมื่อเปิดสคริปต์
 if Settings.AutoElderMossjaw then
 	StartAutoElderMossjaw()
 end
@@ -437,9 +423,6 @@ TabAuto:AddButton({
     end
 })
 
-------------------------------------------------------------
--- 📂 Tab : Teleport
-------------------------------------------------------------
 local TabTP = Window:AddTab({ Title = "Teleport", Icon = "rbxassetid://6035190842" })
 
 local locations = {
@@ -522,7 +505,6 @@ TabTP:AddDropdown("Teleport Shop", {
     end
 })
 
--- ฟังก์ชันสุ่มเซิร์ฟเวอร์
 local function findRandomServer()
 	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
 
@@ -547,7 +529,6 @@ local function findRandomServer()
 	return nil
 end
 
--- ฟังก์ชันย้ายไปเซิร์ฟเวอร์สุ่ม
 local function teleportToRandomServer()
 	local jobId = findRandomServer()
 	if jobId then
