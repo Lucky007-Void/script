@@ -9,6 +9,25 @@ local Window = Fluent:CreateWindow({
     Theme = "Dark"
 })
 
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Button = Instance.new("ImageButton", ScreenGui)
+
+Button.Size = UDim2.new(0, 60, 0, 60)
+Button.Position = UDim2.new(0, 20, 0, 20)
+Button.BackgroundTransparency = 1
+Button.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+Button.ZIndex = 9999
+Button.Active = true
+Button.Draggable = true
+Button.Image = "rbxassetid://136609951292659"
+
+local isVisible = true
+Button.MouseButton1Click:Connect(function()
+	isVisible = not isVisible
+	Window:Minimize()
+end)
+
+
 local Player = game:GetService("Players")
 local LocalPlayer = Player.LocalPlayer
 local Char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
