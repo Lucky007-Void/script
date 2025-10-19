@@ -357,7 +357,7 @@ if Settings.AutoElderMossjaw then
 	StartAutoElderMossjaw()
 end
 
-for _, prompt in pairs(workspace:GetDescendants()) do
+for _, prompt in ipairs(workspace:GetDescendants()) do
     if prompt:IsA("ProximityPrompt") then
         prompt.RequiresLineOfSight = false
     end
