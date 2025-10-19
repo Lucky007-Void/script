@@ -392,7 +392,6 @@ local function startAutoTeleport()
             teleportTo(pos)
             task.wait(0.5)
 
-            -- กดปุ่ม E
             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
             task.wait(0.1)
             VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
@@ -406,7 +405,7 @@ local function startAutoTeleport()
     end
 end
 
-Tab:AddAuto("Auto Candy", {
+TabAuto:AddToggle("Auto Candy", {
     Title = "Auto Candy",
     Default = false,
     Callback = function(state)
