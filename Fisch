@@ -357,6 +357,67 @@ if Settings.AutoElderMossjaw then
 	StartAutoElderMossjaw()
 end
 
+for _, prompt in pairs(workspace:GetDescendants()) do
+    if prompt:IsA("ProximityPrompt") then
+        prompt.RequiresLineOfSight = false
+    end
+end
+
+local function teleportTo(position)
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.CFrame = CFrame.new(position)
+    end
+end
+
+local positions = {
+    Vector3.new(-13.151168823242188, 147.7499237060547, -11465.1083984375),
+    Vector3.new(141.96009826660156, 146.47857666015625, -11596.5751953125),
+    Vector3.new(125.0282974243164, 146.16824340820312, -11497.0888671875),
+    Vector3.new(200.76441955566406, 144.747802734375, -11583.796875),
+    Vector3.new(174.09771728515625, 163.09396362304688, -11449.578125),
+    Vector3.new(231.10092163085938, 144.63844299316406, -11465.9296875),
+    Vector3.new(263.5283508300781, 163.12301635742188, -11568.59375),
+    Vector3.new(295.90106201171875, 156.24871826171875, -11522.2275390625),
+}
+
+local autoTeleportEnabled = false
+
+local function startAutoTeleport()
+    while autoTeleportEnabled do
+        for _, pos in ipairs(positions) do
+            if not autoTeleportEnabled then break end
+
+            teleportTo(pos)
+            task.wait(0.5)
+
+            -- กดปุ่ม E
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+            task.wait(0.1)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+
+            task.wait(15)
+        end
+
+        if autoTeleportEnabled then
+            task.wait(605)
+        end
+    end
+end
+
+Tab:AddAuto("Auto Candy", {
+    Title = "Auto Candy",
+    Default = false,
+    Callback = function(state)
+        autoTeleportEnabled = state
+        if state then
+            task.spawn(startAutoTeleport)
+        end
+    end
+})
+
+
 _G.AutoAppraise = false
 local heldToolName = nil
 
