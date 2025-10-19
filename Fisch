@@ -503,12 +503,6 @@ TabAuto:AddButton({
     end
 })
 
-for _, prompt in ipairs(workspace:GetDescendants()) do
-    if prompt:IsA("ProximityPrompt") then
-        prompt.RequiresLineOfSight = false
-    end
-end
-
 local TabTP = Window:AddTab({ Title = "Teleport", Icon = "rbxassetid://6035190842" })
 
 local locations = {
