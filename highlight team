@@ -1,0 +1,94 @@
+-- 🧩 Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local localPlayer = Players.LocalPlayer -- ตัวเราเอง
+
+-- 📁 โฟลเดอร์เก็บ Highlight
+local highlightFolder = Workspace:FindFirstChild("HighlightContainer")
+if not highlightFolder then
+    highlightFolder = Instance.new("Folder")
+    highlightFolder.Name = "HighlightContainer"
+    highlightFolder.Parent = Workspace
+end
+
+-- 🎨 ฟังก์ชันเลือกสีตามทีม
+local function getTeamColor(player)
+    if not player.Team or not localPlayer.Team then
+        -- ถ้าเกมไม่มีระบบทีม จะให้ทุกคนเป็นสีแดงหมด
+        return Color3.fromRGB(255, 0, 0)
+    end
+    if player.Team == localPlayer.Team then
+        return Color3.fromRGB(0, 170, 255) -- สีฟ้า (ทีมเดียวกับเรา)
+    else
+        return Color3.fromRGB(255, 0, 0) -- สีแดง (ทีมศัตรู)
+    end
+end
+
+-- ✨ ฟังก์ชันสร้าง Highlight
+local function addESP(player)
+    if player == localPlayer then return end -- ไม่ทำกับตัวเอง
+    if not player.Character then return end
+
+    local name = player.Name .. "_ESP"
+    local existing = highlightFolder:FindFirstChild(name)
+    if existing then existing:Destroy() end -- ลบเก่าออกก่อน
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = name
+    highlight.Adornee = player.Character
+    highlight.FillColor = getTeamColor(player)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = highlightFolder
+end
+
+-- ❌ ลบ Highlight เมื่อผู้เล่นออก
+local function removeESP(player)
+    local highlight = highlightFolder:FindFirstChild(player.Name .. "_ESP")
+    if highlight then
+        highlight:Destroy()
+    end
+end
+
+-- 👥 Event เมื่อผู้เล่นเข้ามาใหม่
+Players.PlayerAdded:Connect(function(player)
+    -- เมื่อโหลดตัวละครเสร็จ ค่อยเพิ่ม ESP
+    player.CharacterAdded:Connect(function()
+        addESP(player)
+    end)
+    -- ถ้ามีการเปลี่ยนทีม ให้เปลี่ยนสี ESP ให้ด้วย
+    player:GetPropertyChangedSignal("Team"):Connect(function()
+        addESP(player)
+    end)
+end)
+
+-- ❌ Event เมื่อผู้เล่นออก
+Players.PlayerRemoving:Connect(removeESP)
+
+-- 🚀 สร้าง ESP ให้ผู้เล่นที่อยู่แล้ว
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= localPlayer and player.Character then
+        addESP(player)
+    end
+    player.CharacterAdded:Connect(function()
+        addESP(player)
+    end)
+    player:GetPropertyChangedSignal("Team"):Connect(function()
+        addESP(player)
+    end)
+end
+
+-- 🔄 อัปเดตทุกเฟรม
+RunService.RenderStepped:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character then
+            local highlight = highlightFolder:FindFirstChild(player.Name .. "_ESP")
+            if highlight then
+                highlight.Adornee = player.Character
+                highlight.FillColor = getTeamColor(player)
+            end
+        end
+    end
+end)
