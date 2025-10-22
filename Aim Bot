@@ -6,7 +6,7 @@ local camera = workspace.CurrentCamera
 local locking = false
 local target = nil
 local FOV = 100 -- ระยะรัศมี FOV (pixel)
-local smoothness = 0.5 -- 0.01 (ช้า) - 1 (เร็ว)
+local smoothness = 0.4 -- 0.01 (ช้า) - 1 (เร็ว)
 
 --// วงกลม FOV (ใช้ Drawing API)
 local fovCircle = Drawing.new("Circle")
