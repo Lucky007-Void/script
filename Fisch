@@ -137,7 +137,7 @@ TabMain:AddToggle("AutoReel", {
                 local reelGui = LocalPlayer.PlayerGui:FindFirstChild("reel")
                 if reelGui and reelGui.Enabled and reelGui:FindFirstChild("bar") then
                     task.wait(2)
-                    ReplicatedStorage.events.reelfinished:FireServer(100, false)
+                    ReplicatedStorage.events.reelfinished:FireServer(100, true)
                 end
             end
         end)
@@ -316,7 +316,7 @@ local function StartAutoElderMossjaw()
                         local reelGui = LocalPlayer.PlayerGui:FindFirstChild("reel")
 						if reelGui and reelGui.Enabled and reelGui:FindFirstChild("bar") then
 							task.wait(2)
-							ReplicatedStorage.events.reelfinished:FireServer(100, false)
+							ReplicatedStorage.events.reelfinished:FireServer(100, true)
 						end
 					end
 				end)
