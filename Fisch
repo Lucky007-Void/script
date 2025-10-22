@@ -137,8 +137,8 @@ TabMain:AddToggle("AutoReel", {
                 for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
                     if gui:IsA("ScreenGui") and gui.Name == "reel" then
                         if gui:FindFirstChild("bar") then
-                            task.wait(0.15)
-                            ReplicatedStorage.events.reelfinished:FireServer(100, true)
+                            task.wait(5)
+                            ReplicatedStorage.events.reelfinished:FireServer(100, false)
                         end
                     end
                 end
@@ -147,6 +147,40 @@ TabMain:AddToggle("AutoReel", {
     end
 })
 
+TabMain:AddToggle("Auto Fisch", {
+    Title = "Auto Fisch",
+    Default = false,
+    Callback = function(v)
+        _G.AutoFisch = v
+        pcall(function()
+            -- เริ่ม AutoCast ก่อน
+            task.spawn(function()
+                while _G.AutoFisch do
+                    task.wait(0.2)
+                    local Rod = Char:FindFirstChildOfClass("Tool")
+                    if Rod and Rod:FindFirstChild("events") and Rod.events:FindFirstChild("castAsync") then
+                        Rod.events.castAsync:InvokeServer(math.random(95,100), 1)
+                    end
+                end
+            end)
+            
+            -- จากนั้นเริ่ม AutoReel
+            task.spawn(function()
+                while _G.AutoFisch do
+                    task.wait()
+                    for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name == "reel" then
+                            if gui:FindFirstChild("bar") then
+                                task.wait(5)
+                                ReplicatedStorage.events.reelfinished:FireServer(100, false)
+                            end
+                        end
+                    end
+                end
+            end)
+        end)
+    end
+})
 
 TabMain:AddToggle("Anchored", {
     Title = "Anchored",
@@ -186,6 +220,20 @@ TabMain:AddToggle("Anchored", {
 task.spawn(function()
     while task.wait() do
         if _G.AutoCast then
+            pcall(function()
+                for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if v:IsA("Tool") and (v.Name:lower():find("rod") or v.Name == "Elder Mossripper" or v.Name == "Onirifalx") then
+                        equipitem(v.Name)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if _G.AutoFisch then
             pcall(function()
                 for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
                     if v:IsA("Tool") and (v.Name:lower():find("rod") or v.Name == "Elder Mossripper" or v.Name == "Onirifalx") then
