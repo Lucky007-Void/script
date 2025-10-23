@@ -45,7 +45,6 @@ end
 
 local TabMain = Window:AddTab({ Title = "Main", Icon = "rbxassetid://4483345998" })
 
--- AutoCast
 TabMain:AddToggle("AutoCast", {
     Title = "AutoCast",
     Default = false,
@@ -63,7 +62,6 @@ TabMain:AddToggle("AutoCast", {
     end
 })
 
--- AutoShake
 TabMain:AddToggle("AutoShake", {
     Title = "AutoShake",
     Default = false,
@@ -125,20 +123,38 @@ TabMain:AddToggle("AutoShake", {
     end
 })
 
--- AutoReel
 TabMain:AddToggle("AutoReel", {
     Title = "AutoReel",
     Default = false,
     Callback = function(v)
         _G.AutoReel = v
+        if not _G.AutoReel then return end
         task.spawn(function()
-            while _G.AutoReel do
-                task.wait(0.1)
-                local reelGui = LocalPlayer.PlayerGui:FindFirstChild("reel")
-                if reelGui and reelGui.Enabled and reelGui:FindFirstChild("bar") then
-                    task.wait(2)
-                    ReplicatedStorage.events.reelfinished:FireServer(100, true)
+            local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+            local reelEvent
+
+            local function handleReel(reelGui)
+                if reelGui:IsA("ScreenGui") and reelGui.Name == "reel" then
+                    repeat task.wait()
+                    until not _G.AutoReel or (reelGui.Enabled == true)
+
+                    if not _G.AutoReel then return end
+                    local bar = reelGui:WaitForChild("bar", 2)
+                    if bar then
+                        task.wait(1.5)
+                        ReplicatedStorage.events.reelfinished:FireServer(100, true)
+                    end
                 end
+            end
+
+            for _, gui in ipairs(playerGui:GetChildren()) do
+                handleReel(gui)
+            end
+            
+            reelEvent = playerGui.ChildAdded:Connect(handleReel)
+            repeat task.wait() until not _G.AutoReel
+            if reelEvent then
+                reelEvent:Disconnect()
             end
         end)
     end
@@ -311,15 +327,36 @@ local function StartAutoElderMossjaw()
 				end)
 
 				task.spawn(function()
-					while _G.AutoReel and Settings.AutoElderMossjaw do
-					    task.wait(0.1)
-                        local reelGui = LocalPlayer.PlayerGui:FindFirstChild("reel")
-						if reelGui and reelGui.Enabled and reelGui:FindFirstChild("bar") then
-							task.wait(2)
-							ReplicatedStorage.events.reelfinished:FireServer(100, true)
-						end
-					end
-				end)
+	                while _G.AutoReel and Settings.AutoElderMossjaw do
+		                task.wait()
+		                local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+		                local reelEvent
+
+                        local function handleReel(reelGui)
+	                      	if reelGui:IsA("ScreenGui") and reelGui.Name == "reel" then
+	                    		repeat task.wait()
+                 				until not _G.AutoReel or (reelGui.Enabled == true)
+                                
+		                		if not _G.AutoReel then return end
+		                		local bar = reelGui:WaitForChild("bar", 2)
+            		       		if bar then
+	                    	    	task.wait(1.5)
+	           			        	ReplicatedStorage.events.reelfinished:FireServer(100, true)
+			             	    end
+		          	        end
+	                    end
+
+	             	    for _, gui in ipairs(playerGui:GetChildren()) do
+                			handleReel(gui)
+             		    end
+
+	                    reelEvent = playerGui.ChildAdded:Connect(handleReel)
+                	    repeat task.wait() until not _G.AutoReel or not Settings.AutoElderMossjaw
+                	    if reelEvent then
+	             	        reelEvent:Disconnect()
+                        end
+          	        end
+                end)
 
 				repeat task.wait(2) until not workspace:FindFirstChild("Elder Mossjaw") or not Settings.AutoElderMossjaw
 				if Settings.AutoElderMossjaw then
