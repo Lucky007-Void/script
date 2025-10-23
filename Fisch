@@ -141,7 +141,7 @@ TabMain:AddToggle("AutoReel", {
                     if not _G.AutoReel then return end
                     local bar = reelGui:WaitForChild("bar", 2)
                     if bar then
-                        task.wait(1.5)
+                        task.wait(2)
                         ReplicatedStorage.events.reelfinished:FireServer(100, true)
                     end
                 end
@@ -340,7 +340,7 @@ local function StartAutoElderMossjaw()
 		                		if not _G.AutoReel then return end
 		                		local bar = reelGui:WaitForChild("bar", 2)
             		       		if bar then
-	                    	    	task.wait(1.5)
+	                    	    	task.wait(2)
 	           			        	ReplicatedStorage.events.reelfinished:FireServer(100, true)
 			             	    end
 		          	        end
