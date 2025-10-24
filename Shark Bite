@@ -1,0 +1,251 @@
+-- โหลด Fluent UI
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+-- สร้างหน้าต่างหลัก
+local Window = Fluent:CreateWindow({
+    Title = "Shark Tools",
+    SubTitle = "LuckyZ Hub",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(500, 350),
+    Acrylic = false,
+    Theme = "Dark"
+})
+
+-- เพิ่มแท็บหลัก
+local TabMain = Window:AddTab({ Title = "Main", Icon = "rbxassetid://4483345998" })
+
+--------------------------------------------------------
+-- ตัวแปรหลัก
+--------------------------------------------------------
+local player = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+local workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+
+--------------------------------------------------------
+-- // Toggle 1: Highlight Sharks
+--------------------------------------------------------
+local sharkHighlightEnabled = false
+local sharkConnections = {}
+
+local function clearSharkHighlights()
+    for _, h in pairs(workspace:GetDescendants()) do
+        if h:IsA("Highlight") and h.Name == "SharkHighlight" then
+            h:Destroy()
+        end
+    end
+end
+
+local function highlightSharks()
+    local sharksFolder = workspace:FindFirstChild("Sharks")
+    if not sharksFolder then return end
+
+    clearSharkHighlights()
+
+    for _, shark in pairs(sharksFolder:GetChildren()) do
+        if shark:IsA("Model") or shark:IsA("BasePart") then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "SharkHighlight"
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.5
+            highlight.Parent = shark
+        end
+    end
+
+    sharkConnections[#sharkConnections + 1] = sharksFolder.ChildAdded:Connect(function(shark)
+        task.wait()
+        if shark:IsA("Model") or shark:IsA("BasePart") then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "SharkHighlight"
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.5
+            highlight.Parent = shark
+        end
+    end)
+end
+
+local function disableSharkHighlight()
+    clearSharkHighlights()
+    for _, c in pairs(sharkConnections) do
+        c:Disconnect()
+    end
+    sharkConnections = {}
+end
+
+TabMain:AddToggle("SharkHighlight", {
+    Title = "Highlight Sharks",
+    Default = false,
+    Callback = function(v)
+        sharkHighlightEnabled = v
+        if v then
+            highlightSharks()
+        else
+            disableSharkHighlight()
+        end
+    end
+})
+
+--------------------------------------------------------
+-- // Toggle 2: Player ESP
+--------------------------------------------------------
+local espEnabled = false
+local highlightFolder = workspace:FindFirstChild("HighlightContainer")
+if not highlightFolder then
+    highlightFolder = Instance.new("Folder")
+    highlightFolder.Name = "HighlightContainer"
+    highlightFolder.Parent = workspace
+end
+
+local function addESP(player)
+    if not espEnabled then return end
+    if player == Players.LocalPlayer then return end
+    if player.Character and not highlightFolder:FindFirstChild(player.Name .. "_ESP") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = player.Name .. "_ESP"
+        highlight.Adornee = player.Character
+        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.Parent = highlightFolder
+    end
+end
+
+local function removeESP(player)
+    local highlight = highlightFolder:FindFirstChild(player.Name .. "_ESP")
+    if highlight then highlight:Destroy() end
+end
+
+local espConnections = {}
+
+local function enableESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            addESP(player)
+            player.CharacterAdded:Connect(function()
+                addESP(player)
+            end)
+        end
+    end
+
+    espConnections[#espConnections + 1] = Players.PlayerAdded:Connect(function(p)
+        p.CharacterAdded:Connect(function()
+            addESP(p)
+        end)
+    end)
+    espConnections[#espConnections + 1] = Players.PlayerRemoving:Connect(removeESP)
+
+    espConnections[#espConnections + 1] = runService.RenderStepped:Connect(function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer and player.Character then
+                local highlight = highlightFolder:FindFirstChild(player.Name .. "_ESP")
+                if highlight then
+                    highlight.Adornee = player.Character
+                end
+            end
+        end
+    end)
+end
+
+local function disableESP()
+    for _, h in pairs(highlightFolder:GetChildren()) do
+        if h:IsA("Highlight") then h:Destroy() end
+    end
+    for _, c in pairs(espConnections) do
+        c:Disconnect()
+    end
+    espConnections = {}
+end
+
+TabMain:AddToggle("PlayerESP", {
+    Title = "Player ESP",
+    Default = false,
+    Callback = function(v)
+        espEnabled = v
+        if v then
+            enableESP()
+        else
+            disableESP()
+        end
+    end
+})
+
+--------------------------------------------------------
+-- // Toggle 3: Shark Camera Lock
+--------------------------------------------------------
+local camLockEnabled = false
+local locking = false
+local target = nil
+local FOV = 75
+local smoothness = 0.4
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false
+fovCircle.Thickness = 2
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
+fovCircle.Filled = false
+fovCircle.Radius = FOV
+fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+
+local function getClosestSharkInFOV()
+	local closest, closestDist = nil, FOV
+	local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+	local sharksFolder = workspace:FindFirstChild("Sharks")
+	if not sharksFolder then return nil end
+
+	for _, shark in pairs(sharksFolder:GetChildren()) do
+		if shark:IsA("Model") and shark:FindFirstChild("Body") then
+			local Body = shark.Body
+			local screenPos, onScreen = camera:WorldToViewportPoint(Body.Position)
+			if onScreen then
+				local dist = (center - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+				if dist < closestDist then
+					closest = Body
+					closestDist = dist
+				end
+			end
+		end
+	end
+	return closest
+end
+
+runService.RenderStepped:Connect(function()
+    if not camLockEnabled then
+        fovCircle.Visible = false
+        return
+    end
+    fovCircle.Visible = true
+    fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    if locking then
+        target = getClosestSharkInFOV()
+        if target then
+            local currentCFrame = camera.CFrame
+            local targetCFrame = CFrame.new(currentCFrame.Position, target.Position)
+            camera.CFrame = currentCFrame:Lerp(targetCFrame, smoothness)
+        end
+    end
+end)
+
+uis.InputBegan:Connect(function(input, gameProcessed)
+	if camLockEnabled and not gameProcessed and input.KeyCode == Enum.KeyCode.T then
+		locking = true
+	end
+end)
+uis.InputEnded:Connect(function(input)
+	if camLockEnabled and input.KeyCode == Enum.KeyCode.T then
+		locking = false
+		target = nil
+	end
+end)
+
+TabMain:AddToggle("CameraLock", {
+    Title = "Camera Lock on Shark (Hold T)",
+    Default = false,
+    Callback = function(v)
+        camLockEnabled = v
+        fovCircle.Visible = v
+    end
+})
