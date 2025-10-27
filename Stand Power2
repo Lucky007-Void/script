@@ -23,6 +23,13 @@ local function equipTool(toolName)
     return false
 end
 
+local function pressKey(key)
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    VirtualInputManager:SendKeyEvent(true, key, false, game)
+    wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, key, false, game)
+end
+
 local function clickOnce()
     mouse1click()
 end
@@ -45,6 +52,26 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if equipTool("Candy") then
             wait(0.05)
             clickOnce()
+        end
+    end
+end)
+
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.V then
+        -- ถือ Locacaca Fruit
+        if equipTool("Locacaca Fruit") then
+            wait(0.05)
+            -- กด J
+            pressKey("J")
+            wait(0.5)
+            -- ถือ Arrow
+            if equipTool("Arrow") then
+                wait(0.05)
+                -- คลิกหน้าจอครั้งหนึ่ง
+                clickOnce()
+            end
         end
     end
 end)
