@@ -1,0 +1,50 @@
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function findTool(name)
+    for _, tool in ipairs(player.Backpack:GetChildren()) do
+        if tool.Name == name then
+            return tool
+        end
+    end
+    return nil
+end
+
+local function equipTool(toolName)
+    local tool = findTool(toolName)
+    if tool then
+        tool.Parent = player.Character
+        while player.Character and player.Character:FindFirstChildOfClass("Tool") ~= tool do
+            wait(0.05)
+        end
+        return true
+    end
+    return false
+end
+
+local function clickOnce()
+    mouse1click()
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.G then
+        -- ถือ Locacaca Fruit
+        if equipTool("Candy Basket") then
+            wait(0.05)
+            clickOnce()
+        end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.T then
+        -- ถือ Locacaca Fruit
+        if equipTool("Candy") then
+            wait(0.05)
+            clickOnce()
+        end
+    end
+end)
