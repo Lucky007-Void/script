@@ -1,13 +1,11 @@
--- โหลด Fluent UI Library
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
--- 🪟 สร้างหน้าต่างหลัก
 local Window = Fluent:CreateWindow({
     Title = "Auto System",
     SubTitle = "by Lucky_y3k",
     TabWidth = 120,
     Size = UDim2.fromOffset(520, 320),
-    Acrylic = true,
+    Acrylic = false,
     Theme = "Dark"
 })
 
@@ -17,8 +15,6 @@ local Tab = Window:AddTab({ Title = "Farm", Icon = "rbxassetid://4483345998" })
 -- ⚙️ Roblox Services
 ---------------------------------------------------------------------
 local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -28,12 +24,15 @@ local spawnedItems = workspace:WaitForChild("SpawnedItems")
 -- 🎯 ตัวแปรหลัก
 ---------------------------------------------------------------------
 local autoCollect = false
-local autoUse = false
 local autoBasket = false
+local autoArrow = false
+local autoLocaca = false
 
 local targetItems = {
     ["Candy"] = true,
-    ["Candy Basket"] = true
+    ["Candy Basket"] = true,
+    ["Arrow"] = true,
+    ["Locacaca Fruit"] = true,
 }
 
 ---------------------------------------------------------------------
@@ -62,9 +61,6 @@ spawnedItems.ChildAdded:Connect(function(item)
     fixPrompt(item)
 end)
 
----------------------------------------------------------------------
--- 🔎 หา Item ใกล้สุด (แบบระบุชื่อ)
----------------------------------------------------------------------
 local function getNearestItem(itemName)
     local nearestItem = nil
     local nearestDist = math.huge
@@ -86,9 +82,6 @@ local function getNearestItem(itemName)
     return nearestItem
 end
 
----------------------------------------------------------------------
--- 🍭 Auto Collect Candy
----------------------------------------------------------------------
 local function autoGrabCandy()
     while autoCollect do
         local nearestItem = getNearestItem("Candy")
@@ -104,12 +97,39 @@ local function autoGrabCandy()
     end
 end
 
----------------------------------------------------------------------
--- 🧺 Auto Collect Candy Basket
----------------------------------------------------------------------
 local function autoGrabBasket()
     while autoBasket do
         local nearestItem = getNearestItem("Candy Basket")
+        if nearestItem then
+            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
+            local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
+            if grabPrompt then
+                grabPrompt.HoldDuration = 0
+                fireproximityprompt(grabPrompt)
+            end
+        end
+        task.wait(0.2)
+    end
+end
+
+local function autoGrabArrow()
+    while autoArrow do
+        local nearestItem = getNearestItem("Arrow")
+        if nearestItem then
+            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
+            local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
+            if grabPrompt then
+                grabPrompt.HoldDuration = 0
+                fireproximityprompt(grabPrompt)
+            end
+        end
+        task.wait(0.2)
+    end
+end
+
+local function autoGrabLocaca()
+    while autoLocaca do
+        local nearestItem = getNearestItem("Locacaca Fruit")
         if nearestItem then
             humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
             local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
@@ -132,47 +152,6 @@ local function findTool(name)
         end
     end
     return nil
-end
-
-local function equipTool(toolName)
-    local tool = findTool(toolName)
-    if tool then
-        tool.Parent = player.Character
-        while player.Character and player.Character:FindFirstChildOfClass("Tool") ~= tool do
-            task.wait(0.05)
-        end
-        return true
-    end
-    return false
-end
-
-local Camera = workspace.CurrentCamera
-
-local function ClickRightCenter()
-	local viewport = Camera.ViewportSize
-	local x = viewport.X - 10
-	local y = viewport.Y / 2
-	VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
-	task.wait(0.05)
-	VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
-end
-
-local function autoUseCandy()
-    while autoUse do
-        if equipTool("Candy") then
-            task.wait(0.1)
-            ClickRightCenter()
-        end
-    end
-end
-
-local function autoUseCandyBasket()
-    while autoUse do
-        if equipTool("Candy Basket") then
-            task.wait(0.1)
-            ClickRightCenter()
-        end
-    end
 end
 
 ---------------------------------------------------------------------
@@ -208,42 +187,32 @@ Tab:AddToggle("AutoCollectBasket", {
     end
 })
 
-Tab:AddToggle("AutoUseCandy", {
-    Title = "Auto Use Candy",
-    Description = "ถือ Candy แล้วใช้ซ้ำอัตโนมัติ",
+Tab:AddToggle("AutoCollectArrow", {
+    Title = "Auto Collect Arrow",
+    Description = "เก็บ Arrow อัตโนมัติ",
     Default = false,
     Callback = function(state)
-        autoUse = state
-        if autoUse then
-            warn("🍭 Auto Use Candy เปิดแล้ว")
-            task.spawn(autoUseCandy)
+        autoArrow = state
+        if autoArrow then
+            warn("🧺 Auto Collect Candy Arrow เปิดแล้ว")
+            task.spawn(autoGrabArrow)
         else
-            warn("🍭 Auto Use Candy ปิดแล้ว")
+            warn("🧺 Auto Collect Candy Arrow ปิดแล้ว")
         end
     end
 })
 
-Tab:AddToggle("AutoUseCandyBasket", {
-    Title = "Auto Use Candy Basket",
-    Description = "ถือ Candy Basket แล้วใช้ซ้ำอัตโนมัติ",
+Tab:AddToggle("AutoCollectLocaca", {
+    Title = "Auto Collect Locaca",
+    Description = "เก็บ Locaca อัตโนมัติ",
     Default = false,
     Callback = function(state)
-        autoUse = state
-        if autoUse then
-            warn("🍭 Auto Use Candy เปิดแล้ว")
-            task.spawn(autoUseCandy)
+        autoLocaca = state
+        if autoLocaca then
+            warn("🧺 Auto Collect Locaca เปิดแล้ว")
+            task.spawn(autoGrabLocaca)
         else
-            warn("🍭 Auto Use Candy ปิดแล้ว")
+            warn("🧺 Auto Collect Locaca ปิดแล้ว")
         end
     end
-})
-
----------------------------------------------------------------------
--- 📢 แสดง UI และแจ้งเตือน
----------------------------------------------------------------------
-Window:SelectTab(1)
-Fluent:Notify({
-    Title = "Fluent UI Loaded",
-    Content = "✅ ระบบ Auto Candy + Basket พร้อมใช้งาน!",
-    Duration = 5
 })
