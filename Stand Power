@@ -1,0 +1,249 @@
+-- โหลด Fluent UI Library
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+-- 🪟 สร้างหน้าต่างหลัก
+local Window = Fluent:CreateWindow({
+    Title = "Auto System",
+    SubTitle = "by Lucky_y3k",
+    TabWidth = 120,
+    Size = UDim2.fromOffset(520, 320),
+    Acrylic = true,
+    Theme = "Dark"
+})
+
+local Tab = Window:AddTab({ Title = "Farm", Icon = "rbxassetid://4483345998" })
+
+---------------------------------------------------------------------
+-- ⚙️ Roblox Services
+---------------------------------------------------------------------
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local spawnedItems = workspace:WaitForChild("SpawnedItems")
+
+---------------------------------------------------------------------
+-- 🎯 ตัวแปรหลัก
+---------------------------------------------------------------------
+local autoCollect = false
+local autoUse = false
+local autoBasket = false
+
+local targetItems = {
+    ["Candy"] = true,
+    ["Candy Basket"] = true
+}
+
+---------------------------------------------------------------------
+-- 🧩 ฟังก์ชันปรับ HoldDuration = 0
+---------------------------------------------------------------------
+local function fixPrompt(item)
+    if item:IsA("Model") and targetItems[item.Name] then
+        local handle = item:FindFirstChild("Handle")
+        if handle then
+            for _, obj in pairs(handle:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") then
+                    obj.HoldDuration = 0
+                end
+            end
+        end
+    end
+end
+
+-- ปรับของที่มีอยู่แล้ว
+for _, item in pairs(spawnedItems:GetChildren()) do
+    fixPrompt(item)
+end
+
+-- ปรับของที่ spawn ใหม่
+spawnedItems.ChildAdded:Connect(function(item)
+    fixPrompt(item)
+end)
+
+---------------------------------------------------------------------
+-- 🔎 หา Item ใกล้สุด (แบบระบุชื่อ)
+---------------------------------------------------------------------
+local function getNearestItem(itemName)
+    local nearestItem = nil
+    local nearestDist = math.huge
+
+    for _, item in pairs(spawnedItems:GetChildren()) do
+        if item:IsA("Model") and item.Name == itemName then
+            local handle = item:FindFirstChild("Handle")
+            local grabPrompt = handle and handle:FindFirstChildWhichIsA("ProximityPrompt")
+
+            if handle and grabPrompt then
+                local dist = (humanoidRootPart.Position - handle.Position).Magnitude
+                if dist < nearestDist then
+                    nearestDist = dist
+                    nearestItem = handle
+                end
+            end
+        end
+    end
+    return nearestItem
+end
+
+---------------------------------------------------------------------
+-- 🍭 Auto Collect Candy
+---------------------------------------------------------------------
+local function autoGrabCandy()
+    while autoCollect do
+        local nearestItem = getNearestItem("Candy")
+        if nearestItem then
+            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
+            local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
+            if grabPrompt then
+                grabPrompt.HoldDuration = 0
+                fireproximityprompt(grabPrompt)
+            end
+        end
+        task.wait(0.2)
+    end
+end
+
+---------------------------------------------------------------------
+-- 🧺 Auto Collect Candy Basket
+---------------------------------------------------------------------
+local function autoGrabBasket()
+    while autoBasket do
+        local nearestItem = getNearestItem("Candy Basket")
+        if nearestItem then
+            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
+            local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
+            if grabPrompt then
+                grabPrompt.HoldDuration = 0
+                fireproximityprompt(grabPrompt)
+            end
+        end
+        task.wait(0.2)
+    end
+end
+
+---------------------------------------------------------------------
+-- 🍬 Auto Use Candy
+---------------------------------------------------------------------
+local function findTool(name)
+    for _, tool in ipairs(player.Backpack:GetChildren()) do
+        if tool.Name == name then
+            return tool
+        end
+    end
+    return nil
+end
+
+local function equipTool(toolName)
+    local tool = findTool(toolName)
+    if tool then
+        tool.Parent = player.Character
+        while player.Character and player.Character:FindFirstChildOfClass("Tool") ~= tool do
+            task.wait(0.05)
+        end
+        return true
+    end
+    return false
+end
+
+local Camera = workspace.CurrentCamera
+
+local function ClickRightCenter()
+	local viewport = Camera.ViewportSize
+	local x = viewport.X - 10
+	local y = viewport.Y / 2
+	VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
+	task.wait(0.05)
+	VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
+end
+
+local function autoUseCandy()
+    while autoUse do
+        if equipTool("Candy") then
+            task.wait(0.1)
+            ClickRightCenter()
+        end
+    end
+end
+
+local function autoUseCandyBasket()
+    while autoUse do
+        if equipTool("Candy Basket") then
+            task.wait(0.1)
+            ClickRightCenter()
+        end
+    end
+end
+
+---------------------------------------------------------------------
+-- 🧭 UI Toggles
+---------------------------------------------------------------------
+Tab:AddToggle("AutoCollectCandy", {
+    Title = "Auto Collect Candy",
+    Description = "เก็บ Candy อัตโนมัติ",
+    Default = false,
+    Callback = function(state)
+        autoCollect = state
+        if autoCollect then
+            warn("✅ Auto Collect Candy เปิดแล้ว")
+            task.spawn(autoGrabCandy)
+        else
+            warn("❌ Auto Collect Candy ปิดแล้ว")
+        end
+    end
+})
+
+Tab:AddToggle("AutoCollectBasket", {
+    Title = "Auto Collect Candy Basket",
+    Description = "เก็บ Candy Basket อัตโนมัติ",
+    Default = false,
+    Callback = function(state)
+        autoBasket = state
+        if autoBasket then
+            warn("🧺 Auto Collect Candy Basket เปิดแล้ว")
+            task.spawn(autoGrabBasket)
+        else
+            warn("🧺 Auto Collect Candy Basket ปิดแล้ว")
+        end
+    end
+})
+
+Tab:AddToggle("AutoUseCandy", {
+    Title = "Auto Use Candy",
+    Description = "ถือ Candy แล้วใช้ซ้ำอัตโนมัติ",
+    Default = false,
+    Callback = function(state)
+        autoUse = state
+        if autoUse then
+            warn("🍭 Auto Use Candy เปิดแล้ว")
+            task.spawn(autoUseCandy)
+        else
+            warn("🍭 Auto Use Candy ปิดแล้ว")
+        end
+    end
+})
+
+Tab:AddToggle("AutoUseCandyBasket", {
+    Title = "Auto Use Candy Basket",
+    Description = "ถือ Candy Basket แล้วใช้ซ้ำอัตโนมัติ",
+    Default = false,
+    Callback = function(state)
+        autoUse = state
+        if autoUse then
+            warn("🍭 Auto Use Candy เปิดแล้ว")
+            task.spawn(autoUseCandy)
+        else
+            warn("🍭 Auto Use Candy ปิดแล้ว")
+        end
+    end
+})
+
+---------------------------------------------------------------------
+-- 📢 แสดง UI และแจ้งเตือน
+---------------------------------------------------------------------
+Window:SelectTab(1)
+Fluent:Notify({
+    Title = "Fluent UI Loaded",
+    Content = "✅ ระบบ Auto Candy + Basket พร้อมใช้งาน!",
+    Duration = 5
+})
