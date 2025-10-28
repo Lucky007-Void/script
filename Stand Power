@@ -84,7 +84,7 @@ local function autoGrab(itemName, toggleVar)
     while _G[toggleVar] do
         local nearestItem = getNearestItem(itemName)
         if nearestItem then
-            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
+            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 2, 0)
             local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
             if grabPrompt then
                 grabPrompt.HoldDuration = 0
@@ -122,29 +122,6 @@ local function useToolLoop(toolName, toggleVar)
 			ClickCenter()
 		end
 		task.wait(0.01)
-	end
-end
-
-local function findServer()
-	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
-	local success, result = pcall(function()
-		return game:HttpGet(url)
-	end)
-	if success then
-		local data = HttpService:JSONDecode(result)
-		for _, server in ipairs(data.data) do
-			if server.id ~= currentJobId then
-				return server.id
-			end
-		end
-	end
-	return nil
-end
-
-local function teleportToLowestServer()
-	local jobId = findServer()
-	if jobId then
-		TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
 	end
 end
 
@@ -214,7 +191,57 @@ Tab:AddToggle("AutoCollectLocaca", {
     end
 })
 
-Tab:AddButton({
+local TabTP = Window:AddTab({ Title = "Teleport", Icon = "rbxassetid://6035190842" })
+
+-- 📍 เพิ่ม CFrame พร้อมทิศทาง (CFrame.new(Position, LookAt))
+local locations = {
+    ["Bank"] = CFrame.new(Vector3.new(-85.67863464355469, 2.8666749000549316, -57.05775833129883), Vector3.new(0.00011417376663303003, -3.4151412364735734e-08, -1)),
+    ["Shop"] = CFrame.new(Vector3.new(903.0167236328125, 3.158618450164795, -548.1094360351562), Vector3.new(-0.000008531090315955225, 7.364124599007482e-08, -1)),
+    ["Diego"] = CFrame.new(Vector3.new(600.8616943359375, 61.156192779541016, 876.5402221679688), Vector3.new(0.0000022957772216614103, 8.747453961177598e-08, -1)),
+    ["Dio"] = CFrame.new(Vector3.new(1018.2171630859375, 3.158618450164795, -408.26019287109375), Vector3.new(0.0000028156744065199746, -2.048044400737581e-08, -1)),
+    ["The Park"] = CFrame.new(Vector3.new(370.802001953125, 3.522308826446533, 65.10295104980469), Vector3.new(-0.000007719565473962575, 1.0695021757101131e-07, -1)),
+}
+
+
+local function teleport(location)
+    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = location
+    end
+end
+
+local function findServer()
+	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+	local success, result = pcall(function()
+		return game:HttpGet(url)
+	end)
+	if success then
+		local data = HttpService:JSONDecode(result)
+		for _, server in ipairs(data.data) do
+			if server.id ~= currentJobId then
+				return server.id
+			end
+		end
+	end
+	return nil
+end
+
+local function teleportToLowestServer()
+	local jobId = findServer()
+	if jobId then
+		TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+	end
+end
+
+TabTP:AddDropdown("Teleport", {
+    Title = "Select Teleport",
+    Values = {"Bank", "Shop", "Diego", "Dio", "The Park"},
+    Multi = false,
+    Callback = function(v)
+        teleport(locations[v])
+    end
+})
+
+TabTP:AddButton({
     Title = "Teleport To Lowest Server",
     Description = "ย้ายไปเซิร์ฟเวอร์ที่คนน้อยที่สุด",
     Callback = function()
