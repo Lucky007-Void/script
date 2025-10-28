@@ -36,29 +36,6 @@ end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.G then
-        -- ถือ Locacaca Fruit
-        if equipTool("Candy Basket") then
-            wait(0.05)
-            clickOnce()
-        end
-    end
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.T then
-        -- ถือ Locacaca Fruit
-        if equipTool("Candy") then
-            wait(0.05)
-            clickOnce()
-        end
-    end
-end)
-
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.V then
         -- ถือ Locacaca Fruit
         if equipTool("Locacaca Fruit") then
