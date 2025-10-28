@@ -91,7 +91,7 @@ local function autoGrab(itemName, toggleVar)
                 fireproximityprompt(grabPrompt)
             end
         end
-        task.wait(0.05)
+        task.wait()
     end
 end
 
@@ -121,7 +121,7 @@ local function useToolLoop(toolName, toggleVar)
 		else
 			ClickCenter()
 		end
-		task.wait(0.01)
+		task.wait(0.05)
 	end
 end
 
