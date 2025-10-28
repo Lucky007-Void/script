@@ -1,8 +1,8 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Auto System",
-    SubTitle = "by Lucky_y3k",
+    Title = "Stand Power",
+    SubTitle = "by LuckyZ Hub",
     TabWidth = 120,
     Size = UDim2.fromOffset(520, 320),
     Acrylic = false,
@@ -11,22 +11,18 @@ local Window = Fluent:CreateWindow({
 
 local Tab = Window:AddTab({ Title = "Farm", Icon = "rbxassetid://4483345998" })
 
----------------------------------------------------------------------
--- ⚙️ Roblox Services
----------------------------------------------------------------------
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local spawnedItems = workspace:WaitForChild("SpawnedItems")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Camera = workspace.CurrentCamera
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 
----------------------------------------------------------------------
--- 🎯 ตัวแปรหลัก
----------------------------------------------------------------------
-local autoCollect = false
-local autoBasket = false
-local autoArrow = false
-local autoLocaca = false
+local placeId = game.PlaceId
+local currentJobId = game.JobId
 
 local targetItems = {
     ["Candy"] = true,
@@ -35,9 +31,15 @@ local targetItems = {
     ["Locacaca Fruit"] = true,
 }
 
----------------------------------------------------------------------
--- 🧩 ฟังก์ชันปรับ HoldDuration = 0
----------------------------------------------------------------------
+local function ClickCenter()
+	local viewport = Camera.ViewportSize
+	local x = viewport.X / 2
+	local y = viewport.Y / 2
+	VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
+	task.wait(0.05)
+	VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
+end
+
 local function fixPrompt(item)
     if item:IsA("Model") and targetItems[item.Name] then
         local handle = item:FindFirstChild("Handle")
@@ -51,12 +53,10 @@ local function fixPrompt(item)
     end
 end
 
--- ปรับของที่มีอยู่แล้ว
 for _, item in pairs(spawnedItems:GetChildren()) do
     fixPrompt(item)
 end
 
--- ปรับของที่ spawn ใหม่
 spawnedItems.ChildAdded:Connect(function(item)
     fixPrompt(item)
 end)
@@ -64,12 +64,10 @@ end)
 local function getNearestItem(itemName)
     local nearestItem = nil
     local nearestDist = math.huge
-
     for _, item in pairs(spawnedItems:GetChildren()) do
         if item:IsA("Model") and item.Name == itemName then
             local handle = item:FindFirstChild("Handle")
             local grabPrompt = handle and handle:FindFirstChildWhichIsA("ProximityPrompt")
-
             if handle and grabPrompt then
                 local dist = (humanoidRootPart.Position - handle.Position).Magnitude
                 if dist < nearestDist then
@@ -82,9 +80,9 @@ local function getNearestItem(itemName)
     return nearestItem
 end
 
-local function autoGrabCandy()
-    while autoCollect do
-        local nearestItem = getNearestItem("Candy")
+local function autoGrab(itemName, toggleVar)
+    while _G[toggleVar] do
+        local nearestItem = getNearestItem(itemName)
         if nearestItem then
             humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
             local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
@@ -93,58 +91,10 @@ local function autoGrabCandy()
                 fireproximityprompt(grabPrompt)
             end
         end
-        task.wait(0.2)
+        task.wait(0.05)
     end
 end
 
-local function autoGrabBasket()
-    while autoBasket do
-        local nearestItem = getNearestItem("Candy Basket")
-        if nearestItem then
-            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
-            local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
-            if grabPrompt then
-                grabPrompt.HoldDuration = 0
-                fireproximityprompt(grabPrompt)
-            end
-        end
-        task.wait(0.2)
-    end
-end
-
-local function autoGrabArrow()
-    while autoArrow do
-        local nearestItem = getNearestItem("Arrow")
-        if nearestItem then
-            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
-            local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
-            if grabPrompt then
-                grabPrompt.HoldDuration = 0
-                fireproximityprompt(grabPrompt)
-            end
-        end
-        task.wait(0.2)
-    end
-end
-
-local function autoGrabLocaca()
-    while autoLocaca do
-        local nearestItem = getNearestItem("Locacaca Fruit")
-        if nearestItem then
-            humanoidRootPart.CFrame = nearestItem.CFrame + Vector3.new(0, 3, 0)
-            local grabPrompt = nearestItem:FindFirstChildWhichIsA("ProximityPrompt")
-            if grabPrompt then
-                grabPrompt.HoldDuration = 0
-                fireproximityprompt(grabPrompt)
-            end
-        end
-        task.wait(0.2)
-    end
-end
-
----------------------------------------------------------------------
--- 🍬 Auto Use Candy
----------------------------------------------------------------------
 local function findTool(name)
     for _, tool in ipairs(player.Backpack:GetChildren()) do
         if tool.Name == name then
@@ -154,65 +104,120 @@ local function findTool(name)
     return nil
 end
 
----------------------------------------------------------------------
--- 🧭 UI Toggles
----------------------------------------------------------------------
+local function equipTool(toolName)
+	local tool = findTool(toolName)
+	if tool then
+		player.Character.Humanoid:EquipTool(tool)
+		return true
+	end
+	return false
+end
+
+local function useToolLoop(toolName, toggleVar)
+	while _G[toggleVar] do
+		local tool = player.Character and player.Character:FindFirstChild(toolName)
+		if not tool then
+			equipTool(toolName)
+		else
+			ClickCenter()
+		end
+		task.wait(0.01)
+	end
+end
+
+local function findServer()
+	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+	local success, result = pcall(function()
+		return game:HttpGet(url)
+	end)
+	if success then
+		local data = HttpService:JSONDecode(result)
+		for _, server in ipairs(data.data) do
+			if server.id ~= currentJobId then
+				return server.id
+			end
+		end
+	end
+	return nil
+end
+
+local function teleportToLowestServer()
+	local jobId = findServer()
+	if jobId then
+		TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+	end
+end
+
 Tab:AddToggle("AutoCollectCandy", {
     Title = "Auto Collect Candy",
-    Description = "เก็บ Candy อัตโนมัติ",
     Default = false,
     Callback = function(state)
-        autoCollect = state
-        if autoCollect then
-            warn("✅ Auto Collect Candy เปิดแล้ว")
-            task.spawn(autoGrabCandy)
-        else
-            warn("❌ Auto Collect Candy ปิดแล้ว")
+        _G.autoCollect = state
+        if state then
+            task.spawn(autoGrab, "Candy", "autoCollect")
         end
     end
 })
 
 Tab:AddToggle("AutoCollectBasket", {
     Title = "Auto Collect Candy Basket",
-    Description = "เก็บ Candy Basket อัตโนมัติ",
     Default = false,
     Callback = function(state)
-        autoBasket = state
-        if autoBasket then
-            warn("🧺 Auto Collect Candy Basket เปิดแล้ว")
-            task.spawn(autoGrabBasket)
-        else
-            warn("🧺 Auto Collect Candy Basket ปิดแล้ว")
+        _G.autoBasket = state
+        if state then
+            task.spawn(autoGrab, "Candy Basket", "autoBasket")
+        end
+    end
+})
+
+Tab:AddToggle("AutoUseCandy", {
+    Title = "Auto Use Candy",
+    Default = false,
+    Callback = function(state)
+        _G.autoUseCandy = state
+        if state then
+            task.spawn(useToolLoop, "Candy", "autoUseCandy")
+        end
+    end
+})
+
+Tab:AddToggle("AutoUseBasket", {
+    Title = "Auto Use Candy Basket",
+    Default = false,
+    Callback = function(state)
+        _G.autoUseBasket = state
+        if state then
+            task.spawn(useToolLoop, "Candy Basket", "autoUseBasket")
         end
     end
 })
 
 Tab:AddToggle("AutoCollectArrow", {
     Title = "Auto Collect Arrow",
-    Description = "เก็บ Arrow อัตโนมัติ",
     Default = false,
     Callback = function(state)
-        autoArrow = state
-        if autoArrow then
-            warn("🧺 Auto Collect Candy Arrow เปิดแล้ว")
-            task.spawn(autoGrabArrow)
-        else
-            warn("🧺 Auto Collect Candy Arrow ปิดแล้ว")
+        _G.autoArrow = state
+        if state then
+            task.spawn(autoGrab, "Arrow", "autoArrow")
         end
     end
 })
 
 Tab:AddToggle("AutoCollectLocaca", {
     Title = "Auto Collect Locaca",
-    Description = "เก็บ Locaca อัตโนมัติ",
     Default = false,
     Callback = function(state)
-        autoLocaca = state
-        if autoLocaca then
-            warn("🧺 Auto Collect Locaca เปิดแล้ว")
-            task.spawn(autoGrabLocaca)
-        else
-            warn("🧺 Auto Collect Locaca ปิดแล้ว")
+        _G.autoLocaca = state
+        if state then
+            task.spawn(autoGrab, "Locacaca Fruit", "autoLocaca")
         end
+    end
+})
+
+Tab:AddButton({
+    Title = "Teleport To Lowest Server",
+    Description = "ย้ายไปเซิร์ฟเวอร์ที่คนน้อยที่สุด",
+    Callback = function()
+        teleportToLowestServer()
     end
 })
