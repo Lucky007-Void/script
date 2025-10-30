@@ -208,9 +208,9 @@ TabShop:AddButton({
 })
 
 TabShop:AddButton({
-    Title = "Buy Camare",
+    Title = "Buy Camera",
     Callback = function()
-        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("HalloweenShop"):FireServer("Camare")
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("HalloweenShop"):FireServer("Camera")
     end
 })
 
