@@ -191,6 +191,29 @@ Tab:AddToggle("AutoCollectLocaca", {
     end
 })
 
+local TabShop = Window:AddTab({ Title = "Teleport", Icon = "rbxassetid://6035190842" })
+
+TabShop:AddButton({
+    Title = "Buy Dio Diary2",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("HalloweenShop"):FireServer("True DIO's Diary")
+    end
+})
+
+TabShop:AddButton({
+    Title = "Buy Jack O Lantern",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("HalloweenShop"):FireServer("Jack-O-Lantern")
+    end
+})
+
+TabShop:AddButton({
+    Title = "Buy Camare",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("HalloweenShop"):FireServer("Camare")
+    end
+})
+
 local TabTP = Window:AddTab({ Title = "Teleport", Icon = "rbxassetid://6035190842" })
 
 -- 📍 เพิ่ม CFrame พร้อมทิศทาง (CFrame.new(Position, LookAt))
