@@ -191,7 +191,7 @@ Tab:AddToggle("AutoCollectLocaca", {
     end
 })
 
-local TabShop = Window:AddTab({ Title = "Teleport", Icon = "rbxassetid://6035190842" })
+local TabShop = Window:AddTab({ Title = "Shop", Icon = "rbxassetid://6031265976" })
 
 TabShop:AddButton({
     Title = "Buy Dio Diary2",
