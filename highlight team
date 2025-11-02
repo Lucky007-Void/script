@@ -40,6 +40,7 @@ local function addESP(player)
     highlight.Adornee = player.Character
     highlight.FillColor = getTeamColor(player)
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0.2
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.Parent = highlightFolder
 end
