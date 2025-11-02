@@ -329,33 +329,16 @@ local function StartAutoElderMossjaw()
 				task.spawn(function()
 	                while _G.AutoReel and Settings.AutoElderMossjaw do
 		                task.wait()
-		                local playerGui = LocalPlayer:WaitForChild("PlayerGui")
-		                local reelEvent
-
-                        local function handleReel(reelGui)
-	                      	if reelGui:IsA("ScreenGui") and reelGui.Name == "reel" then
-	                    		repeat task.wait()
-                 				until not _G.AutoReel or (reelGui.Enabled == true)
-                                
-		                		if not _G.AutoReel then return end
-		                		local bar = reelGui:WaitForChild("bar", 2)
-            		       		if bar then
-	                    	    	task.wait(2)
-	           			        	ReplicatedStorage.events.reelfinished:FireServer(100, true)
+		                local reelGui = LocalPlayer.PlayerGui:FindFirstChild("reel")
+                        if reelGui and reelGui.Enabled then
+		                    local bar = reelGui:WaitForChild("bar")
+            		       	if bar then
+	                    	    task.wait(2)
+	           			        ReplicatedStorage.events.reelfinished:FireServer(100, true)
 			             	    end
 		          	        end
 	                    end
-
-	             	    for _, gui in ipairs(playerGui:GetChildren()) do
-                			handleReel(gui)
-             		    end
-
-	                    reelEvent = playerGui.ChildAdded:Connect(handleReel)
-                	    repeat task.wait() until not _G.AutoReel or not Settings.AutoElderMossjaw
-                	    if reelEvent then
-	             	        reelEvent:Disconnect()
-                        end
-          	        end
+                    end
                 end)
 
 				repeat task.wait(2) until not workspace:FindFirstChild("Elder Mossjaw") or not Settings.AutoElderMossjaw
