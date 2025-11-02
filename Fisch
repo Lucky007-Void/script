@@ -338,8 +338,7 @@ local function StartAutoElderMossjaw()
 			             	    end
 		          	        end
 	                    end
-                    end
-                end)
+                    end)
 
 				repeat task.wait(2) until not workspace:FindFirstChild("Elder Mossjaw") or not Settings.AutoElderMossjaw
 				if Settings.AutoElderMossjaw then
