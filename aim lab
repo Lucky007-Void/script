@@ -5,8 +5,8 @@ local camera = workspace.CurrentCamera
 
 local locking = false
 local targetPart = nil
-local FOV = 300
-local smoothness = 0.4
+local FOV = 500
+local smoothness = 0.5
 
 local fovCircle = Drawing.new("Circle")
 fovCircle.Visible = true
@@ -16,10 +16,27 @@ fovCircle.Radius = FOV
 fovCircle.Filled = false
 fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
 
+-- **[1] ฟังก์ชันตรวจสอบว่ามีผนังกั้นหรือไม่ (ไม่ทะลุกำแพง)**
 local function canSee(targetPosition)
+    local rayOrigin = camera.CFrame.Position
+    local rayDirection = (targetPosition - rayOrigin).Unit * (targetPosition - rayOrigin).Magnitude
+    local raycastParams = RaycastParams.new()
+    -- กรอง Character ของผู้เล่นออกจากการ Raycast
+    raycastParams.FilterDescendantsInstances = {player.Character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+    
+    if raycastResult then
+        -- ตรวจสอบว่าจุดที่ Raycast ชนนั้น ใกล้เคียงกับตำแหน่งเป้าหมายหรือไม่
+        -- ถ้าใกล้เคียง แสดงว่าไม่มีอะไรบัง
+        return raycastResult.Position:FuzzyEq(targetPosition, 0.1)
+    end
+    -- ถ้า Raycast ไม่ชนอะไรเลย ก็ถือว่าเห็น
     return true
 end
 
+-- **[2] ฟังก์ชันหา Part 'Target' ที่ใกล้กลางหน้าจอที่สุดใน FOV**
 local function getClosestTargetInFOV()
     local closest = nil
     local closestDist = FOV
@@ -31,7 +48,8 @@ local function getClosestTargetInFOV()
             local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
             if onScreen then
                 local dist = (center - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
-                if dist < closestDist then
+                -- **เพิ่มเงื่อนไข: ต้องสามารถมองเห็นได้ (canSee)**
+                if dist < closestDist and canSee(part.Position) then
                     closest = part
                     closestDist = dist
                 end
@@ -43,13 +61,13 @@ local function getClosestTargetInFOV()
 end
 
 uis.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.T then
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.V then
         locking = true
     end
 end)
 
 uis.InputEnded:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.T then
+    if input.KeyCode == Enum.KeyCode.V then
         locking = false
         targetPart = nil
     end
