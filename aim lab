@@ -1,0 +1,71 @@
+local player = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+local locking = false
+local targetPart = nil
+local FOV = 300
+local smoothness = 0.4
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = true
+fovCircle.Thickness = 2
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
+fovCircle.Radius = FOV
+fovCircle.Filled = false
+fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+
+local function canSee(targetPosition)
+    return true
+end
+
+local function getClosestTargetInFOV()
+    local closest = nil
+    local closestDist = FOV
+
+    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part.Name == "Target" and part:IsA("BasePart") then
+            local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
+            if onScreen then
+                local dist = (center - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if dist < closestDist then
+                    closest = part
+                    closestDist = dist
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+uis.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.T then
+        locking = true
+    end
+end)
+
+uis.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.T then
+        locking = false
+        targetPart = nil
+    end
+end)
+
+runService.RenderStepped:Connect(function()
+    fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    fovCircle.Radius = FOV
+
+    if locking then
+        targetPart = getClosestTargetInFOV()
+        
+        if targetPart then
+            local currentCFrame = camera.CFrame
+            local targetCFrame = CFrame.new(currentCFrame.Position, targetPart.Position)
+            camera.CFrame = currentCFrame:Lerp(targetCFrame, smoothness)
+        end
+    end
+end)
