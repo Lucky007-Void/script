@@ -31,7 +31,7 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "cpu" })
 }
 
-local args = {"1"}
+local args = {"8"}
 local SettingsFile = "Unboxing_RNG_Settings.json"
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
