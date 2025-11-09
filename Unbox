@@ -31,7 +31,7 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "cpu" })
 }
 
-local args = {"8"}
+local args = {"1"}
 local SettingsFile = "Unboxing_RNG_Settings.json"
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -52,13 +52,11 @@ local function SaveSettings()
     end
 end
 
--- Toggle ตัวแปร
 local CollectM = Settings.AutoCollectMoney or false
 local CollectV = Settings.AutoCollectVault or false
 local CollectJ = Settings.AutoJoin or false
 local CollectE = Settings.AutoEvent or false
 
--- ฟังก์ชันหลัก
 local function AutoCollectMoney()
     while CollectM do
         task.wait()
@@ -87,7 +85,6 @@ local function AutoEvent()
     end
 end
 
--- Add Toggles
 Tabs.Main:AddToggle("AutoCollectMoney", {
     Title = "Auto Collect Money",
     Default = CollectM,
