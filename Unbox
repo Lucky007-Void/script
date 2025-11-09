@@ -1,0 +1,138 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Unboxing RNG",
+    SubTitle = "LuckyZ Hub",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(500, 350),
+    Acrylic = false,
+    Theme = "Dark"
+})
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Button = Instance.new("ImageButton", ScreenGui)
+
+Button.Size = UDim2.new(0, 60, 0, 60)
+Button.Position = UDim2.new(0, 20, 0, 20)
+Button.BackgroundTransparency = 1
+Button.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+Button.ZIndex = 9999
+Button.Active = true
+Button.Draggable = true
+Button.Image = "rbxassetid://136609951292659"
+
+local isVisible = true
+Button.MouseButton1Click:Connect(function()
+	isVisible = not isVisible
+	Window:Minimize()
+end)
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "cpu" })
+}
+
+local args = {"1"}
+local SettingsFile = "Unboxing_RNG_Settings.json"
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Settings = {}
+if isfile and isfile(SettingsFile) then
+    local success, data = pcall(function()
+        return HttpService:JSONDecode(readfile(SettingsFile))
+    end)
+    if success and data then
+        Settings = data
+    end
+end
+
+local function SaveSettings()
+    if writefile then
+        writefile(SettingsFile, HttpService:JSONEncode(Settings))
+    end
+end
+
+-- Toggle ตัวแปร
+local CollectM = Settings.AutoCollectMoney or false
+local CollectV = Settings.AutoCollectVault or false
+local CollectJ = Settings.AutoJoin or false
+local CollectE = Settings.AutoEvent or false
+
+-- ฟังก์ชันหลัก
+local function AutoCollectMoney()
+    while CollectM do
+        task.wait()
+        ReplicatedStorage:WaitForChild("UI"):WaitForChild("Remotes"):WaitForChild("ClickMoney"):FireServer()
+    end
+end
+
+local function AutoCollectVault()
+    while CollectV do
+        task.wait(0.5)
+        ReplicatedStorage:WaitForChild("Bank"):WaitForChild("Remotes"):WaitForChild("Collect"):FireServer()
+    end
+end
+
+local function AutoJoin()
+    while CollectJ do
+        task.wait(5)
+        ReplicatedStorage:WaitForChild("Giveaways"):WaitForChild("Remotes"):WaitForChild("Join"):FireServer()
+    end
+end
+
+local function AutoEvent()
+    while CollectE do
+        task.wait(1)
+        ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Remotes"):WaitForChild("TrickOrTreat"):InvokeServer(unpack(args))
+    end
+end
+
+-- Add Toggles
+Tabs.Main:AddToggle("AutoCollectMoney", {
+    Title = "Auto Collect Money",
+    Default = CollectM,
+    Callback = function(state)
+        CollectM = state
+        Settings.AutoCollectMoney = state
+        SaveSettings()
+        if state then task.spawn(AutoCollectMoney) end
+    end
+})
+
+Tabs.Main:AddToggle("AutoCollectVault", {
+    Title = "Auto Collect Vault",
+    Default = CollectV,
+    Callback = function(state)
+        CollectV = state
+        Settings.AutoCollectVault = state
+        SaveSettings()
+        if state then task.spawn(AutoCollectVault) end
+    end
+})
+
+Tabs.Main:AddToggle("AutoJoin", {
+    Title = "Auto Join",
+    Default = CollectJ,
+    Callback = function(state)
+        CollectJ = state
+        Settings.AutoJoin = state
+        SaveSettings()
+        if state then task.spawn(AutoJoin) end
+    end
+})
+
+Tabs.Main:AddToggle("AutoEvent", {
+    Title = "Auto Event",
+    Default = CollectE,
+    Callback = function(state)
+        CollectE = state
+        Settings.AutoEvent = state
+        SaveSettings()
+        if state then task.spawn(AutoEvent) end
+    end
+})
+
+if CollectM then task.spawn(AutoCollectMoney) end
+if CollectV then task.spawn(AutoCollectVault) end
+if CollectJ then task.spawn(AutoJoin) end
+if CollectE then task.spawn(AutoEvent) end
