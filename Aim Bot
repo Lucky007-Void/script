@@ -5,10 +5,10 @@ local camera = workspace.CurrentCamera
 
 local locking = false
 local target = nil
-local FOV = 100 -- ระยะรัศมี FOV (pixel)
-local smoothness = 0.4 -- 0.01 (ช้า) - 1 (เร็ว)
+local FOV = 60
+local smoothness = 0.4
 
---// วงกลม FOV (ใช้ Drawing API)
+-- วงกลม FOV
 local fovCircle = Drawing.new("Circle")
 fovCircle.Visible = true
 fovCircle.Thickness = 2
@@ -17,27 +17,40 @@ fovCircle.Radius = FOV
 fovCircle.Filled = false
 fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
 
--- ฟังก์ชันตรวจสอบว่ามีผนังกั้นหรือไม่
-local function canSee(targetPosition)
+-- ฟังก์ชันตรวจสอบว่าสามารถเห็นหัวเป้าหมายได้บางส่วน
+local function canSeePartially(head)
     local rayOrigin = camera.CFrame.Position
-    local rayDirection = (targetPosition - rayOrigin).Unit * (targetPosition - rayOrigin).Magnitude
     local raycastParams = RaycastParams.new()
     raycastParams.FilterDescendantsInstances = {player.Character}
     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 
-    local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-    if raycastResult then
-        return raycastResult.Instance:IsDescendantOf(player.Character) == false 
-            and raycastResult.Position:FuzzyEq(targetPosition, 0.1)
+    -- จุดรอบหัว 5 จุด (กลาง, ซ้าย, ขวา, บน, ล่าง)
+    local offsets = {
+        Vector3.new(0, 0, 0),
+        Vector3.new(0.3, 0, 0),
+        Vector3.new(-0.3, 0, 0),
+        Vector3.new(0, 0.3, 0),
+        Vector3.new(0, -0.3, 0)
+    }
+
+    local visibleCount = 0
+    for _, offset in ipairs(offsets) do
+        local targetPos = head.Position + offset
+        local direction = (targetPos - rayOrigin)
+        local result = workspace:Raycast(rayOrigin, direction, raycastParams)
+        if not result or result.Instance:IsDescendantOf(head.Parent) then
+            visibleCount += 1
+        end
     end
-    return true
+
+    -- ถ้าเห็นอย่างน้อย 1 จุด (หัวโผล่นิดเดียว) ให้ล็อก
+    return visibleCount > 0, visibleCount >= #offsets
 end
 
--- ฟังก์ชันหาผู้เล่นที่ใกล้กลางหน้าจอที่สุดใน FOV
+-- หาผู้เล่นที่ใกล้กลางหน้าจอที่สุดใน FOV
 local function getClosestPlayerInFOV()
     local closest = nil
     local closestDist = FOV
-
     local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
 
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -46,9 +59,12 @@ local function getClosestPlayerInFOV()
             local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
             if onScreen then
                 local dist = (center - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
-                if dist < closestDist and canSee(head.Position) then
-                    closest = head
-                    closestDist = dist
+                if dist < closestDist then
+                    local canSee, fullHeadVisible = canSeePartially(head)
+                    if canSee then
+                        closest = {head = head, full = fullHeadVisible}
+                        closestDist = dist
+                    end
                 end
             end
         end
@@ -74,15 +90,22 @@ end)
 
 -- อัพเดตทุกเฟรม
 runService.RenderStepped:Connect(function()
-    -- อัพเดตตำแหน่งและรัศมี FOV
     fovCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
     fovCircle.Radius = FOV
 
     if locking then
-        target = getClosestPlayerInFOV()
-        if target then
+        local found = getClosestPlayerInFOV()
+        if found and found.head then
+            target = found
+            local aimPoint = found.head.Position
+
+            -- ถ้าเห็นเต็มหัวให้เล็งกลางหัว (ยกขึ้นนิดหน่อย)
+            if found.full then
+                aimPoint = aimPoint + Vector3.new(0, 0.1, 0)
+            end
+
             local currentCFrame = camera.CFrame
-            local targetCFrame = CFrame.new(currentCFrame.Position, target.Position)
+            local targetCFrame = CFrame.new(currentCFrame.Position, aimPoint)
             camera.CFrame = currentCFrame:Lerp(targetCFrame, smoothness)
         end
     end
